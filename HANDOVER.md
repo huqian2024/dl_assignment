@@ -959,6 +959,10 @@ total 388 -> 128/130/130 (full)
 最终最好 feature 为 **order64 whitened 256-D + raw response PCA64**（320-D，记 V4）。
 没有把 raw coefficients 直接送回归器。
 
+由于 VF reconstruction 本身不可用（order48 仍 relL2 0.141），
+V1（poles only）、V2（poles + residues）、V3（V2 + order64 latent）没有进入参数回归；
+这是按 §25 停止 VF 分支的直接结果，而不是“pole 表示已被否定”。
+
 
 
 
