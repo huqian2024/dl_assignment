@@ -58,6 +58,13 @@ raw S (B, 4, 2001)  ->  delta_m (B, 41)
   validation: mean **14.66 dB**, median 14.83, P90 16.74 (from 21.56/19.06/33.69),
   but pass remains **0/1000**; both S11 requirements remain at 0% pass while
   S21 is largely fixed. No encoder unfreeze was run.
+- **Stage 10 (S11-targeted gate)**: complete — clipping/saturation audit,
+  exact per-requirement gradients, S11/S21 conflict analysis, S11 gradient SVD,
+  full-41 vs 9-D B11 oracle, low-D SPSA and an S11-specific head. Stage 9 policy
+  is heavily clipping-dependent (46.8% coordinates, 100% samples); S11 gradient is
+  larger than S21 but less aligned with full-objective directions. Exact oracle
+  reaches S11 13.4→8.10 dB / overall 9.34, but the S11 head only reaches
+  S11 12.69 / pass 0, so no encoder unfreeze was run.
 - **Final reference model**: R3 raw+Tukey(α=0.25), FNO 32 modes, 3.28M parameters.
   Validation MAE `0.0322`, one-shot pass rate `0/1000` (current known limitation).
 

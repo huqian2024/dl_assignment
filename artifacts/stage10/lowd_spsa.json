@@ -1,0 +1,23 @@
+{
+  "eps": 0.01,
+  "basis_dim": 9,
+  "lam21": 1.6002827557142836,
+  "K": {
+    "2": {
+      "cosine_median": 0.5036070162165223,
+      "cosine_p10": 0.27234570509641487,
+      "sign_agreement_median": 0.6666666666666666
+    },
+    "4": {
+      "cosine_median": 0.5958120199076604,
+      "cosine_p10": 0.45753507181272224,
+      "sign_agreement_median": 0.6666666666666666
+    },
+    "8": {
+      "cosine_median": 0.7497200581524899,
+      "cosine_p10": 0.6221770514674154,
+      "sign_agreement_median": 0.6666666666666666
+    }
+  },
+  "simulator_calls": 448
+}

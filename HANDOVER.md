@@ -1568,4 +1568,160 @@ Core final artifacts：
 - 已完成 smooth calibration、coordinate gradient、oracle、SPSA fidelity、residual-head tune/full training、validation one-shot。
 - **未新增 state / seed / public seed；未重优化 anchor；未训练 FNO/Transformer。**
 - 没有执行 partial encoder unfreeze；本阶段在 residual-head positive gate 后停止。
+
+
+---
+
+## 19. Stage 10 — S11-targeted gate（clipping / gradient / oracle / head）
+
+### 19.1 范围与起点
+
+- 起点：Stage 9 full-8000 refined policy（base FNO m32 + frozen general residual head）。
+- 只使用 train-tune 7000:7999；没有 validation 拟合；没有新增 state / seed / public seed / anchor 搜索。
+- 代码：`scripts/stage10_study.py`；结果：`artifacts/stage10/*.json`。
+
+### 19.2 Clipping / bound saturation（Q1）
+
+256 个 tune states：
+
+| metric | value |
+|---|---:|
+| mean |y| | 1.014 |
+| P90 |y| | 2.062 |
+| mean L2 | 8.03 |
+| outside-coordinate fraction（clip 前） | **0.4679** |
+| samples with ≥1 clipped coordinate | **1.000** |
+| S11 high-miss group outside rate | 0.4688 |
+| S11 low-miss group outside rate | 0.4670 |
+
+参数 10/11/12/15/20/25/35 的 clipping rate 接近 **100%**；lower-bound 最常撞的是 11/15/25/36，
+upper-bound 最常撞的是 10/12/20/35/28。
+
+**Q1：Stage 9 policy 高度依赖 clipping。** 这不是少见的边界情况，而是主要工作方式之一；
+高 S11 miss 与低 S11 miss 的 clipping 程度几乎相同。
+
+### 19.3 Exact per-requirement gradients（Q2/Q3/Q4）
+
+32 个 tune states，eps=0.01，从 Stage 9 refined y 出发：
+
+| gradient | median norm | P10 | P90 |
+|---|---:|---:|---:|
+| S11_1 | 11.91 | 7.75 | 20.97 |
+| S11_2 | 14.69 | 9.34 | 30.31 |
+| **S11 (worst-of-two)** | **9.63** | 7.47 | 15.78 |
+| **S21 barrier** | **4.53** | 2.11 | 8.43 |
+| full | 12.66 | 9.12 | 19.00 |
+
+**Q2：S11 gradient 不弱，反而大于 S21 barrier（9.63 vs 4.53）。**  
+所以 Stage 9 没有改善 S11 不是“S11 gradient 太小”。
+
+Gradient conflict：
+
+| pair | cosine median | P10 | fraction <0 |
+|---|---:|---:|---:|
+| S11 vs S21 barrier | **0.872** | 0.685 | **0.0** |
+| S11_1 vs S11_2 | **0.045** | −0.181 | 0.344 |
+
+**Q3：S11/S21 基本协同，没有严重冲突。**  
+**Q4：两个 S11 band 轻度冲突（34% cosine<0，但没有 <−0.5）。**
+
+S11 gradient top parameters：
+
+```text
+23, 22, 21, 33, 31, 32, 38, 14, 18, 19, 4, 39, 6, 16, 30
+```
+
+这与 Stage 9 full-objective top（19,26,25,17,16,28,7,21,20,18）不同；
+S11 的主要控制方向确实不是 full objective 的主要方向。
+
+### 19.4 S11 gradient rank（Q5）
+
+S11 gradient matrix `G11 ∈ R^{32×41}` 的 SVD：
+
+```text
+d=1  33.6%    d=4  75.5%    d=8  94.1%
+d=9  95.7%    d=12 98.2%    d=16 99.5%
+```
+
+
+### 19.5 Exact oracle（Q6/Q7）
+
+从 Stage 9 y 出发，line search（32 states）：
+
+| direction | eta | S11 mean | overall mean | S21 mean |
+|---|---:|---:|---:|---:|
+| full41 | 0.02 | 10.86 | 11.98 | 0.112 |
+| B11 | 0.02 | 11.08 | 12.26 | 0.165 |
+
+B11 与 full41 非常接近；**Q6：低维 B11 保留了 full-41 的大部分 oracle 效果。**
+
+Multi-step exact oracle（16 states，full41，eta=0.02）：
+
+| step | S11 mean | overall mean | S21 mean |
+|---:|---:|---:|---:|
+| 0 | 12.62 | 14.19 | 0.634 |
+| 1 | 11.34 | 12.47 | 0.182 |
+| 2 | 9.90 | 11.23 | 0.068 |
+| 4 | 8.48 | 9.81 | 0.001 |
+| 8 | **8.10** | **9.34** | **0.025** |
+
+**Q7：存在持续下降的局部路径；S11 从 12.6→8.10，overall 9.34，S21 没有被破坏。**
+Gate A（<8）和 B（S11 pass>0）未达到；Gate C/D 达到（overall<10 且持续下降）。
+
+### 19.6 Low-dimensional SPSA（Q8）
+
+d=9 的 B11 subspace，16 states：
+
+| K | cosine median | cosine P10 | sign agreement |
+|---:|---:|---:|---:|
+| 2 | 0.504 | 0.272 | 0.667 |
+| 4 | 0.596 | 0.458 | 0.667 |
+| **8** | **0.750** | **0.622** | 0.667 |
+
+**Q8：低维 SPSA 明显优于 Stage 9 的 0.539；K=8 达到 0.75。**
+
+### 19.7 S11-specific head（Q9）
+
+S11 head：Stage 9 encoder latent → Linear 256/GELU/ResFC → `c∈R^9`，zero-init；
+`y_final = y_Stage9 + B11 c`。Stage 9 model 与 B11 冻结。
+
+200 steps，batch 16，K=8，eps=0.01，lr=1e-4：
+
+| split | base S11 | refined S11 | base overall | refined overall | pass |
+|---|---:|---:|---:|---:|---:|
+| tune 1000 | 12.87 | **12.69** | 14.15 | **13.98** | 0 |
+
+`c` mean |c| **0.062**，P90 0.147；S11 head 只学到很小的动作，S11 几乎没有改善。
+**Q9：没有出现 S11 pass >0；S11-head positive gate 失败。**
+
+### 19.8 Q10 — 是否 partial encoder unfreeze？
+
+**不允许进入。** Stage 10 规则是只有 S11-head positive gate 通过才允许 partial unfreeze；
+本阶段 S11 head 失败，因此没有解冻 encoder，也没有跑 validation full head。
+
+### 19.9 Simulator-call accounting
+
+| phase | calls |
+|---|---:|
+| clipping audit | 256 |
+| exact gradients | 2,656 |
+| exact oracle | 10,848 |
+| low-D SPSA fidelity | 448 |
+| S11 head training | 53,456 |
+| **total** | **≈67,664** |
+
+### 19.10 Stop
+
+- 已完成 clipping audit、per-requirement gradients、conflict、SVD、full/B11 oracle、low-D SPSA、S11 head。
+- **未新增 state / seed / public seed；未重优化 anchor；未训练 FNO/Transformer。**
+- Stage 10 结论：S11 确实有低维、可下降的 exact-gradient 路径，但当前以 Stage 9 latent 为输入的
+  S11 head 没有学会足够大的动作；不应直接 partial unfreeze。
+- 下一步若要继续，应优先解决 **S11 head 的优化/幅度问题**（或 S11-specific features），
+  而不是增加数据或换 representation。
+
+
+95% energy rank：**9**。因此 `B11` 取 **d=9**。
+
+**Q5：S11 action space 非常低维，9 维足够解释 95%。**
+
 - 剩余核心问题是 **S11 compliance**，不是 mean miss；下一步应做 S11-weighted objective 或 very controlled last-stage unfreeze。
