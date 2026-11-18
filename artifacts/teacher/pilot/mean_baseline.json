@@ -1,0 +1,17 @@
+{
+  "teacher": {
+    "mean_baseline_nrmse": 0.8221936898175686,
+    "target_std_mean": 0.37085362016259166,
+    "target_norm_mean": 3.048009786632142
+  },
+  "anchor": {
+    "mean_baseline_nrmse": 0.8202651233718053,
+    "target_std_mean": 0.38181755277036294,
+    "target_norm_mean": 3.147681572641271
+  },
+  "state": {
+    "mean_baseline_nrmse": 1.0051840431936725,
+    "target_std_mean": 0.381817552770363,
+    "target_norm_mean": 2.5430070416754966
+  }
+}

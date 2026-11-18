@@ -13,6 +13,7 @@
 | Stage 1 | 工程准备：环境、数据缓存、anchor、DSP、FNO/ResNet/Pooling/Head、四条路线、export、smoke test | ✅ 完成 |
 | Stage 2 | Route 3 正式研究：representation R1/R2/R3、FNO modes 32/64/96/128、state/one-shot/residual 分析 | ✅ 完成 |
 | Stage 3 | Pairwise / observable-subspace control 研究：response PCA、local Jacobian、可观测子空间、线性差分 controller | ✅ 完成（线性无信号，按规则停止） |
+| Stage 4 | Per-state compliant teacher 结构验证（256-state train pilot，线搜索 + 局部可行点搜索 + 几何/可学习性分析） | ✅ 完成（无积极信号，不扩展到 8000） |
 
 **最终参考模型**：Route 3（Delay-FNO）+ **R3 raw+Tukey(α=0.25) + 32 modes**  
 - 3,275,325 参数；
@@ -608,4 +609,136 @@ response 最近的 10% pair，其 parameter distance 仍有 3.11（random 3.59�
 3. **线性差分控制不成立**：从 Δz 线性预测 Δu/observable coordinates，在 anchor 大跨度 correction 上没有产生可用信号；mean miss 与旧 state-identification 基本相同，pass 0。
 4. 原因判断：anchor 步长较大、局部线性 A 只解释 ~38% 的 Δz 方差、参数-响应映射强非线性且病态；线性化不足以支撑 0.001–0.002 的 correction 精度。
 5. 这并不否定“直接预测 correction”的方向，但说明**在当前 anchor、PCA latent、线性控制器与 8k 数据下**不可行。
+
+---
+
+## 13. Stage 4 — Per-state compliant teacher pilot
+
+### 13.1 动机
+
+检验假设：旧的固定 anchor target `m* - m_i` 是否把大量“只在弱可辨识方向上的移动”强加给了网络；若为每个 state 找一个**离它更近的合规点**，监督标签是否会显著更 sparse / low-rank / 可学习。
+
+约束：不生成新 state；只对 train 前 256 个 state 做 pilot；anchor 固定；未使用 validation 调 teacher optimizer；public seeds 未使用。
+
+### 13.2 实现
+
+```text
+solution/teacher.py        line_search_anchor / local_teacher_search / margins
+scripts/teacher_pilot.py   line | teacher | analyze | all
+
+artifacts/teacher/pilot/
+  line_gamma0.00.npz/json       current -> anchor 线搜索
+  line_gamma0.25.npz/json       robust margin = 0.25 dB
+  teacher_gamma0.00.npz/json    per-state 局部可行点搜索
+  teacher_gamma0.25.npz/json
+  analysis_gamma0.00.json       几何 / sparsity / SVD / projection / 一致性 / Ridge
+  analysis_gamma0.25.json
+  mean_baseline.json            target 均值预测基线
+  plots/                        t_line / reduction / teacher spectrum / sparsity
+```
+
+复现：
+
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+.venv/bin/python scripts/teacher_pilot.py --stage all \
+  --pilot 256 --workers 12 --gammas 0.0 0.25 --max-iter 8 --population 32
+```
+
+局部搜索：从 line teacher 出发，方向 = 指向 current 的 `d0` + Stage 3 observable/weak 方向 +
+9 个 specification-sensitive 参数 one-hot + random；每轮 32 候选；lexicographic 目标：
+(1) `min margin >= gamma`，(2) 最小 `||Delta u||_2`，(3) 平局时更大 min margin。
+
+### 13.3 结果
+
+**Q1 — anchor 连线边界**
+
+| gamma | t median | P10 | P25 | P75 | P90 | min | max | t<0.25 | t<0.50 | t<0.75 | t>0.90 |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0.00 | **0.9867** | 0.9777 | 0.9828 | 0.9898 | 0.9922 | 0.9609 | 0.9953 | 0 | 0 | 0 | 100% |
+| 0.25 | 0.9898 | 0.9824 | 0.9859 | 0.9922 | 0.9938 | 0.9633 | 0.9969 | 0 | 0 | 0 | 100% |
+
+沿 current→anchor 连线，必须走到几乎 anchor 本身才合规；不存在“更早进入合规区”的现象。
+
+**Q2 — 局部可行点搜索**
+
+| gamma | pass | teacher/anchor norm median | mean | P10 | P90 | min margin median |
+|---:|---:|---:|---:|---:|---:|---:|
+| 0.00 | 256/256 | **0.9696** | 0.9680 | 0.9539 | 0.9797 | 0.076 dB |
+| 0.25 | 256/256 | 0.9724 | 0.9715 | 0.9574 | 0.9837 | 0.318 dB |
+
+局部搜索只能比 anchor 近约 **3%**（line 本身为 0.987，teacher 0.970）。
+
+**Q3 — sparsity / 低秩**
+
+```text
+|Delta u| > 0.01 : mean 40.25 / 41 parameters
+|Delta u| > 0.05 : mean 37.10
+|Delta u| > 0.10 : mean 33.22
+teacher correction singular values: 29.58, 9.45, 9.03, 8.95, 8.56, ...
+cumulative variance: r=1 0.364, r=4 0.468, r=12 0.688, ...
+```
+
+不 sparse；看似“低秩”主要是因为所有 correction 共享同一个 anchor 方向，而不是个体只动少数参数。
+
+**Q4 — observable / weak 子空间能量**
+
+| r | teacher observable fraction | anchor observable fraction |
+|---:|---:|---:|
+| 8 | 0.1355 | 0.1353 |
+| 16 | 0.4564 | 0.4586 |
+| 24 | 0.7023 | 0.7030 |
+| 32 | 0.8415 | 0.8427 |
+
+teacher 与 anchor 几乎完全相同：**没有减少弱子空间上的移动**。
+
+**Q5 — response-neighbor 一致性**
+
+```text
+nearest-response teacher delta distance : 3.135
+random teacher delta distance          : 3.474   (ratio 0.903)
+nearest-response anchor delta distance : 3.227
+random anchor delta distance           : 3.579   (ratio 0.902)
+corr(response distance, teacher delta) : 0.339
+corr(response distance, anchor delta)  : 0.350
+```
+
+teacher 标签相对 anchor 没有变得更 response-consistent。
+
+**Q6 — cheap learnability（pilot 内 80/20 split，Ridge，带截距）**
+
+| target | K=64 nrmse | K=512 nrmse | mean-predictor baseline |
+|---|---:|---:|---:|
+| teacher Δu | 0.740 | 0.805 | 0.822 |
+| anchor Δu | 0.738 | 0.803 | 0.820 |
+| absolute state u | 0.902 | 0.982 | 1.005 |
+
+teacher target 与 anchor target 几乎一样；相对 absolute-state 的“提升”主要来自 target 共有的均值方向（mean baseline 也相应更低），
+没有可辨别的 “teacher 更可学” 信号。
+
+**Q7 — 是否扩展到 8000**
+
+**No。** 五项预设成功指标全部未满足：
+
+```text
+teacher norm 显著降低？      3% only
+effective rank 明显降低？    否（低秩仅来自共享均值方向）
+response-neighbor 更一致？   否（ratio 0.903 vs anchor 0.902）
+weak-subspace 能量降低？     否（projection 几乎相同）
+Ridge 明显更好学？           否（teacher ≈ anchor）
+```
+
+Simulator calls：line 2×2,048 + teacher 93,038 + 91,796 = **188,930**；总 wall ~1,039 s。
+
+### 13.4 结论
+
+当前 anchor 附近的合规区是一个很小的“口袋”：256 个 train states 沿任意测试方向都只能把 correction 缩短约 3%。
+per-state teacher 与 fixed-anchor correction 在 norm、方向、sparsity、observable/weak 分布和 response 一致性上几乎不可区分。
+
+因此：**“旧标签是错的、真正需要的是 per-state 更近的合规目标”这一假设在本 anchor 下不成立。**
+问题不在监督标签的选择，而在于 response 对合规 correction 的信息不足/条件数差。
+
+不建议对 8000 states 生成 teacher；若未来重开此方向，需要先改变 compliance target 族（多 anchor / 更宽 margin）
+或大幅扩充数据，而不是继续优化 teacher。
+
 

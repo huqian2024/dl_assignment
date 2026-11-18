@@ -17,6 +17,10 @@ raw S (B, 4, 2001)  ->  delta_m (B, 41)
   Jacobian spectrum, observable subspace, linear differential controllers.
   Result: no usable signal (0% pass, mean miss ≈20.6 dB), so no neural
   controller was trained.
+- **Stage 4 (per-state teacher pilot)**: complete — anchor-line search and
+  constrained local teacher search on 256 train states. The compliant region is
+  a tiny pocket near the anchor; teacher corrections are ~97% of the anchor
+  correction, dense, and no more learnable/consistent. No 8000-state expansion.
 - **Final reference model**: R3 raw+Tukey(α=0.25), FNO 32 modes, 3.28M parameters.
   Validation MAE `0.0322`, one-shot pass rate `0/1000` (current known limitation).
 

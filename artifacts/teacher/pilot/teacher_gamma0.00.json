@@ -1,0 +1,17 @@
+{
+  "gamma": 0.0,
+  "states": 256,
+  "passed_all": true,
+  "passed_count": 256,
+  "call_count": 93038,
+  "iterations_mean": 7.87890625,
+  "iterations_max": 8,
+  "min_margin_quantiles": {
+    "median": 0.0762472152709961,
+    "p10": 0.0101470947265625,
+    "min": 0.00042724609375
+  },
+  "wall_seconds": 509.13088699300033,
+  "max_iter": 8,
+  "population": 32
+}
