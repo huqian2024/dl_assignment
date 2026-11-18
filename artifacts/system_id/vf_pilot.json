@@ -1,0 +1,91 @@
+{
+  "n_states": 32,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31
+  ],
+  "frequency_transform": {
+    "wc": 1950000000.0,
+    "ws": 450000000.0
+  },
+  "vector_fitting": {
+    "16": {
+      "order": 16,
+      "rel_l2_median": 0.3213207161089572,
+      "rel_l2_p90": 0.4774117229206216,
+      "spec_error_db_median": 28.221405737379527,
+      "pole_movement_median": 8.81333322898618e-06
+    },
+    "24": {
+      "order": 24,
+      "rel_l2_median": 0.2875576230984095,
+      "rel_l2_p90": 0.31942246680712444,
+      "spec_error_db_median": 24.50289399175638,
+      "pole_movement_median": 0.06461071244665248
+    },
+    "32": {
+      "order": 32,
+      "rel_l2_median": 0.22279011488728245,
+      "rel_l2_p90": 0.2922320942343708,
+      "spec_error_db_median": 19.828341246612624,
+      "pole_movement_median": 0.20028654838944976
+    },
+    "40": {
+      "order": 40,
+      "rel_l2_median": 0.17879625935645735,
+      "rel_l2_p90": 0.26445387518523666,
+      "spec_error_db_median": 16.54118144732312,
+      "pole_movement_median": 0.3415765078653329
+    },
+    "48": {
+      "order": 48,
+      "rel_l2_median": 0.14099779875910023,
+      "rel_l2_p90": 0.21991095509938163,
+      "spec_error_db_median": 14.162211264872939,
+      "pole_movement_median": 0.4883239815481129
+    }
+  },
+  "fixed_pole_fallback": {
+    "64": {
+      "order": 64,
+      "rel_l2_median": 0.08987541138816851,
+      "rel_l2_p90": 0.1181047315366855
+    },
+    "96": {
+      "order": 96,
+      "rel_l2_median": 0.05849069218329961,
+      "rel_l2_p90": 0.08453881729868253
+    }
+  },
+  "conclusion": "VF relocation unstable; fixed-pole fallback inaccurate; keep Chebyshev coefficients"
+}

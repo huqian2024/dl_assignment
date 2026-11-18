@@ -25,7 +25,16 @@ raw S (B, 4, 2001)  ->  delta_m (B, 41)
   features, shared-denominator rational fitting (Chebyshev, frequency holdout)
   and Ridge/MLP regression. Rational coefficients improve parameter MAE
   0.0295→0.0250 and weak-parameter R² substantially, but one-shot remains
-  0% pass / mean miss 20.5 dB, so no 8000-state expansion.
+  0% pass / mean miss 20.5 dB.
+- **Stage 6 (existing-8000 system-ID + ambiguity check)**: complete — shared-pole
+  Vector Fitting pilot (unstable, rejected), order-64 coefficients on all 8000
+  cached train states with group whitening, global/local Ridge and small ResMLP,
+  1k/2k/4k/8k learning curve, exact raw-response nearest-neighbor and
+  cross-correction tests. No new states/seeds. Best cheap model: Ridge on
+  whitened order64 + raw PCA64, physical MAE **0.02329**, mean R² **0.564**;
+  best one-shot is ResMLP at **18.96 dB** mean miss (still 0% pass). The closest
+  raw-response pair has `d_S=0.258`; therefore no true near-collision was found
+  and Stage 5's ambiguity interpretation is retracted.
 - **Final reference model**: R3 raw+Tukey(α=0.25), FNO 32 modes, 3.28M parameters.
   Validation MAE `0.0322`, one-shot pass rate `0/1000` (current known limitation).
 

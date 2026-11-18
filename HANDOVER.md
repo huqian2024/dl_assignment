@@ -882,22 +882,216 @@ correction L2 mean 0.340, clipping 0.96%
 对比旧 Route-3 state model：mean 20.95 dB，pass 0。  
 **Q6：没有显著改善。** 表示层提升了 state 回归，但仍远不足以跨越 compliance 精度门槛。
 
-### 14.8 Q7 — realization / parameterization ambiguity
+### 14.8 Q7 — 修正说明（Stage 6 复核）
 
-Rational order 64 对 response 的重建几乎精确（holdout relL2 ~1e-6，spec 误差 <0.001 dB），
-但仍有 4 个参数 R²<0.1：**21, 23, 26, 31**（另有 33/29 较低）。
-这提供了明确的 **response-equivalent / near-equivalent hidden-state ambiguity** 证据：
+Stage 5 曾把“rational 重建几乎精确 + 少数参数 Ridge R² 低”解释为 response-equivalent /
+parameterization ambiguity 的证据。这个解释**证据不足**，Stage 6 已正式复核并撤回：
 
-> 频响可以被低阶 rational model 精确表示，但 41 维隐藏参数化中的部分方向仍不可从 S 唯一恢复。
+- rational 表示保留了 response 信息，只能说明 remaining inverse map 对线性 Ridge 仍困难；
+- Stage 6 在 8000 条已有 train states 上做 exact raw-response nearest-neighbor：
+  `d_S` 最小值 **0.258**、中位数 **0.390**，没有任何 `d_S < 0.01` 的 pair；
+- 因此不能把低 R² 直接称为 ambiguity，也没有证明 control ambiguity。
 
-因此不能把问题简单归结为“更多数据”；至少有一部分是 realization/parameterization ambiguity。
+Stage 6 的 near-collision / cross-correction 结果见 §15.6–15.7。
 
 ### 14.9 结论与 Stop
 
 - Rational/system-ID 表示是**真实的正向信号**（weak parameters 大幅改善，MAE −15%）。
 - 但 MAE 仍 0.025、one-shot mean 20.5 dB / pass 0，仍落在“未解决核心问题”的区间（0.025–0.03）。
-- 按 §17/§21：**不扩展到 8000 states、不训练 FNO/大模型**。本阶段停止。
+- 按 Stage 5 stop gate：本阶段停止；Stage 6 已用**已有 8000 条数据**继续验证，
+  没有新增 state，也没有重新优化 anchor。
 - 若继续，优先方向应是：在 rational coefficients 上结合 margin/sensitivity-aware 目标、
   或研究 canonical realization/control map，而不是增加样本或换更大网络。
 
+
+
+---
+
+## 15. Stage 6 — shared-pole 试验、8000-state system-ID 与 ambiguity 复核
+
+### 15.1 范围与硬约束
+
+- 只使用已有缓存：train **8000**、validation **1000**；没有调用 `sample_state`，没有新增 seed。
+- 未使用 public seeds `10000..10049`；未重新优化 anchor；未训练 FNO/Transformer。
+- 将 Stage 5 的 order-64 Chebyshev rational coefficients 从 2000 条扩展到**全部已有 8000 条 train**；
+  validation 1000 只用于评价。
+- 代码：`solution/vector_fitting.py`、`scripts/stage6_study.py`；
+  结果：`artifacts/system_id/vf_pilot.json`、`artifacts/stage6/*.json`。
+
+### 15.2 Shared-pole Vector Fitting（Q1/Q2）
+
+实现 normalized `s = j(ω-ω_c)/ω_s`、deterministic conjugate pole 初始化、shared poles、
+5–6 次 relocation、稳定性/共轭约束、75/25 frequency holdout。32 个 train states 的 pilot：
+
+| order | holdout relL2 median | P90 | spec max error median | pole movement median |
+|---:|---:|---:|---:|---:|
+| 16 | 0.3213 | 0.4774 | 28.22 dB | 8.8e-6 |
+| 24 | 0.2876 | 0.3194 | 24.50 dB | 0.0646 |
+| 32 | 0.2228 | 0.2922 | 19.83 dB | 0.2003 |
+| 40 | 0.1788 | 0.2645 | 16.54 dB | 0.3416 |
+| 48 | 0.1410 | 0.2199 | 14.16 dB | 0.4883 |
+
+Fixed-pole barycentric/partial-fraction fallback：
+
+| order | holdout relL2 median | P90 |
+|---:|---:|---:|
+| 64 | 0.0899 | 0.1181 |
+| 96 | 0.0585 | 0.0845 |
+
+对比 Stage 5 Chebyshev order 64：holdout relL2 median **1.19e-6**、spec error median **0.00039 dB**。
+Vector Fitting 在所有测试 order 都远弱于 Chebyshev；pole movement 未收敛（order48 仍 0.49），
+condition number 达 `1e12–1e13`，没有“最低可靠 order”。
+
+**Q1/Q2 结论：** 本实现下 shared-pole VF 没有可靠 order，也不比 order64 Chebyshev 更稳定/更低维/更易预测；
+按 §25 停止 VF 分支，保留 Stage 5 coefficient representation。
+
+### 15.3 分组 whitening 与最终 feature
+
+对 order64 系数按 `d / a / b` 三组做 train-only mean/std + PCA whitening：
+
+```text
+total 64  -> d/a/b = 21/22/21
+total 128 -> 42/43/43
+total 256 -> 84/86/86
+total 388 -> 128/130/130 (full)
+```
+
+最终最好 feature 为 **order64 whitened 256-D + raw response PCA64**（320-D，记 V4）。
+没有把 raw coefficients 直接送回归器。
+
+
+
+
+
+### 15.4 8000-state models（Q3）
+
+Validation 1000；`MAE` 为 bounds-normalized `u` 空间，`physical MAE` 为原始参数尺度。
+
+| model | normalized MAE | physical MAE | P95 norm | mean R² | median R² | #R²<0.1 | weak 21/23/26/31 R² |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Global Ridge (V4, 320-D) | **0.1780** | **0.02329** | 0.5184 | 0.564 | 0.562 | **1** | 0.153 / 0.083 / 0.190 / 0.144 |
+| Local weighted Ridge (k=256, λ=10) | 0.2094 | 0.02758 | 0.6078 | 0.386 | 0.439 | 10 | −0.284 / −0.472 / −0.335 / −0.210 |
+| Small ResMLP (1.36M) | 0.1770 | 0.02372 | **0.4933** | **0.572** | **0.610** | 4 | 0.038 / −0.061 / 0.031 / 0.023 |
+| Stage 5 Ridge reference | — | 0.02502 | — | 0.504 | — | 3 | 0.086 / 0.023 / 0.115 / 0.074 |
+
+- Global Ridge 的 physical MAE 从 Stage 5 的 0.02502 降到 **0.02329**（约 −7%），mean R² 0.504→0.564，
+  `#R²<0.1` 从 3 降到 1。
+- Local weighted Ridge 明显差于 global：在 whitened system-ID 空间中，近邻并不对应参数近邻；
+  `k=32..256`、`λ=1e-2/10` 的最好结果仍只有 0.2094，因此没有“局部近似线性”的证据。
+- ResMLP 的 normalized MAE/P95 略好，但 physical MAE 不如 Ridge，且 21/23/26/31 的 R² 反而更差；
+  在这批 fixed-length system-ID 特征上没有看到非线性模型的实质增益。
+
+### 15.5 Existing-data learning curve（Q4）
+
+固定同一 validation 1000，只用已有 train 的前 N 条：
+
+| N | Ridge MAE | Ridge mean R² | ResMLP MAE | ResMLP mean R² |
+|---:|---:|---:|---:|---:|
+| 1000 | 0.20571 | 0.4064 | 0.21998 | 0.4046 |
+| 2000 | 0.18928 | 0.5040 | 0.20592 | 0.4653 |
+| 4000 | 0.18217 | 0.5432 | 0.18857 | 0.5279 |
+| 8000 | **0.17800** | **0.5643** | **0.17700** | **0.5721** |
+
+曲线在 1k→8k 仍单调下降，但边际收益递减；8k 处 ResMLP 仅比 Ridge 低 0.001。
+**只陈述现有曲线，不建议新增数据。**
+
+
+### 15.6 True near-collision test（Q6）
+
+在 8000 条 train 上做 exact raw-response nearest-neighbor（flatten complex S11/S21，relative L2）：
+
+| statistic | value |
+|---|---:|
+| min `d_S` | **0.2580** |
+| median nearest `d_S` | 0.3897 |
+| nearest 1% median `d_S` | 0.2930 |
+| nearest 0.1% median `d_S` | 0.2676 |
+| nearest 0.01% median `d_S` | 0.2580 |
+| pairs with `d_S < 0.01` | **0** |
+| pairs with `d_S < 1e-3/1e-4/1e-5` | 0 / 0 / 0 |
+
+最接近的 pair：seed `5914 ↔ 1729`，`d_S = 0.2580`，`d_u = 3.238`；
+其后 `558 ↔ 3855`，`d_S = 0.2663`，`d_u = 3.103`。
+`d_u` 的量级接近 normalized state 空间的直径，说明这些只是“相对接近”，**不是 response-equivalent**。
+
+feature-space NN 更差：256-D whitened 特征最近邻 `d_S` 中位数 0.510、最小 0.285。
+因此不能依赖 feature NN 作为 near-collision 候选。
+
+### 15.7 Cross-correction 与 ambiguity 判据（Q7）
+
+对 raw-response 最近的 30 个 pair 交叉应用 anchor correction（每对 4 种）：
+
+| case | pass rate | 说明 |
+|---|---:|---|
+| `i + Δ_i`（own） | **100%** | anchor 本身合规 |
+| `j + Δ_j`（own） | **100%** | 同上 |
+| `j + Δ_i`（cross） | **0%** | miss 18–50 dB |
+| `i + Δ_j`（cross） | **0%** | miss 18–50 dB |
+
+但所有这些 pair 的 `d_S` 仍在 0.258–0.30，**不满足 `d_S << 1`**。
+按 §20 的严格判据，cross correction 失败**不能**解释为 response ambiguity：它只反映了参数差异仍然很大。
+因此：
+
+> 现有 8000 条缓存 states 中**没有发现真正的 near-collision**；
+
+
+### 15.8 Weak parameters 21/23/26/31 的条件 spread（Q5）
+
+对每个 validation state 取 k=20 个 response-nearest train states，统计每个参数的条件 std：
+
+| param | Ridge R² | ResMLP R² | raw-NN conditional/std | feature-NN conditional/std |
+|---:|---:|---:|---:|---:|
+| 21 | 0.153 | 0.038 | 0.936 | 0.879 |
+| 23 | 0.083 | −0.061 | 0.927 | 0.914 |
+| 26 | 0.190 | 0.031 | 0.944 | 0.916 |
+| 31 | 0.144 | 0.023 | 0.947 | 0.908 |
+
+同时 Stage 5 已改善的参数 1/37/38/39/40 的 raw-NN 条件 std 比值为 0.967/0.937/0.959/0.950/0.961，
+与 21/23/26/31 没有本质差异。由于 raw NN 的 `d_S` 仍有 0.26–0.39，条件 spread 几乎不收缩是预期的；
+**这不是 weak-observability 的证据**。更准确的结论是：
+
+> 21/23/26/31 对当前 global nonlinear inverse map 仍然难预测；
+> 但在现有数据的 response 分辨率下，没有证据表明它们不可辨识。
+
+### 15.9 One-shot（Q8）
+
+Validation 1000，best-anchor correction：
+
+| model | pass | mean miss | median | P90 | worst |
+|---|---:|---:|---:|---:|---:|
+| Global Ridge V4 | 0/1000 | 19.80 dB | 18.49 | 26.17 | 54.93 |
+| Local weighted Ridge | 0/1000 | 20.02 dB | 18.74 | 24.42 | 92.87 |
+| **Small ResMLP** | **0/1000** | **18.96 dB** | **18.13** | **19.59** | **54.83** |
+| Stage 5 Ridge reference | 0/1000 | 20.50 dB | 18.69 | 30.76 | 56.23 |
+
+- ResMLP 平均 miss 比 Stage 5 低 **1.54 dB**，P90 从 30.76 降到 19.59；但仍 pass 0。
+- Global Ridge 的 physical MAE 更低，但 one-shot mean miss 略高于 ResMLP；
+  两者都远未达到 one-shot 所需的 `1e-3–2e-3` state precision。
+- 没有出现 `pass > 0`，也没有出现 mean miss <15 dB；因此 Stage 6 只是**缩放信号**，不是问题解决。
+
+### 15.10 Q1–Q8 汇总
+
+1. **Q1**：shared-pole VF 在 order 16–48 都没有可靠 order；order48 仍 relL2 0.141 / spec 14.2 dB。
+2. **Q2**：没有优于 order64 Chebyshev；VF 不稳定且精度差，已停止该分支。
+3. **Q3**：8000 states 下 Global Ridge physical MAE **0.02329** / mean R² **0.564**；
+   local weighted Ridge **0.02758** / 0.386；small ResMLP **0.02372** / 0.572。
+4. **Q4**：Ridge 0.2057→0.1893→0.1822→0.1780；ResMLP 0.2200→0.2059→0.1886→0.1770；
+   仍下降但边际递减；不建议新增数据。
+5. **Q5**：21/23/26/31 仍是 global inverse map 的难点（Ridge R² 0.08–0.19，ResMLP 更差），
+   但在 response-near 条件下没有观察到选择性的大 spread；不能判为不可辨识。
+6. **Q6**：没有真正的 near-collision；raw-response 最小 `d_S = 0.258`，无 `d_S < 0.01`。
+7. **Q7**：最近 pair 的 cross correction 全部失败，但 `d_S` 仍约 0.26–0.30，
+   不满足严格 ambiguity 判据；不能据此声称 control ambiguity。
+8. **Q8**：best one-shot 为 ResMLP：pass 0/1000，mean **18.96 dB**，median 18.13，
+   P90 19.59，worst 54.83；比 Stage 5 的 20.50 dB 好，但仍远未通过。
+
+### 15.11 Stop
+
+- 已完成 shared-pole pilot、8000-state order64 特征、global/local/ResMLP、1k/2k/4k/8k 曲线、
+  near-collision/cross-correction、validation one-shot。
+- **未新增任何 state，未使用新 seed，未使用 public seeds，未重新优化 anchor，未训练大 FNO/Transformer。**
+- 下一步如继续，只能在现有数据上做 margin/sensitivity-aware 回归或 canonical control map；
+  不应把“更多数据”作为默认建议。
+
+> Stage 5 的“ambiguity”解释不成立，Stage 6 也没有证明 control ambiguity。
 
