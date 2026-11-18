@@ -1,8 +1,31 @@
 # CM19 One-Shot S→ΔM — 工程交接文档
 
-> 最后更新：2026-11-17  
+> 最后更新：2026-11-18
 > 项目根目录：`/home/qian/DL_assignment_2026`  
 > 上游仓库：<https://github.com/huqian2024/dl_assignment.git>
+
+---
+
+## 立即恢复（新对话先读这里）
+
+**当前状态：Stage 10 已完成并封存，停在 S11-head negative gate。不要继续训练或解冻。**
+
+- 当前代码基线：`main`，Stage 10 功能提交 `63ffb59`；封存提交见 `git log -1`。
+- 已完成：Stage 1–10。Stage 9 得到当前最佳 one-shot policy：
+  validation mean **14.66 dB**（21.56→14.66），P90 **16.74 dB**，但 pass 仍为 **0/1000**。
+- Stage 10 结论：
+  - Stage 9 policy 高度依赖 clipping：**46.8%** coordinates 越界，**100%** 样本至少一个坐标被 clip。
+  - S11 gradient 不弱（median norm **9.63** > S21 **4.53**），与 S21 基本协同（cosine **0.872**）。
+  - S11 action space 很低维：**d=9** 解释 **95.7%**。
+  - exact oracle 能把 S11 从 12.62→**8.10 dB**、overall→**9.34 dB**，S21→0.025；有真实下降路径。
+  - 但 S11-specific head 只把 S11 从 12.87 降到 **12.69 dB**、overall 14.15→13.98，**pass 0**；head 失败。
+- 因此**没有**跑 full S11 head validation，**没有** partial encoder unfreeze。
+- 下一步唯一优先级：诊断 **S11 head 动作幅度/优化问题**（`c` mean |c| 仅 0.062），
+  仍只在 train-tune 7000:7999 上试；head gate 通过后才允许 full-8000 + validation once。
+- 硬约束：不新增 state/seed/public seed；不重优化 anchor；不训练 FNO/Transformer；
+  不在 validation 上拟合；没有 head gate 不做 partial unfreeze。
+
+详细证据：§18（Stage 9）、§19（Stage 10）、§20（本次封存与恢复清单）。
 
 ---
 
@@ -15,6 +38,16 @@
 | Stage 3 | Pairwise / observable-subspace control 研究：response PCA、local Jacobian、可观测子空间、线性差分 controller | ✅ 完成（线性无信号，按规则停止） |
 | Stage 4 | Per-state compliant teacher 结构验证（256-state train pilot，线搜索 + 局部可行点搜索 + 几何/可学习性分析） | ✅ 完成（无积极信号，不扩展到 8000） |
 | Stage 5 | System-identification / rational representation（complex algebra、shared-denominator fit、Ridge/MLP） | ✅ 完成（表示层有正信号，但 one-shot 仍 0；按规则不扩到 8000） |
+| Stage 6 | 现有 8000 状态 system-ID + ambiguity check（Vector Fitting、order-64、Ridge/ResMLP、学习曲线、最近邻） | ✅ 完成（最佳 physical MAE 0.02329，one-shot 仍 0） |
+| Stage 7 | rational-coordinate stability / probes（稳定性、PCA、PLS2、ablation、quadratic） | ✅ 完成（系数稳定；未超过 Stage 6；不转 canonical/Loewner） |
+| Stage 8 | learned-forward surrogate / refinement gate（raw-PCA、rational+raw、Adam/LM） | ✅ 完成（surrogate 不够准，refinement gate 未过；不 unroll） |
+| Stage 9 | smooth specification + zero-order residual policy（calibration、SPSA、frozen-base head） | ✅ 完成（validation 21.56→**14.66**，pass 仍 0；S11 是瓶颈） |
+| Stage 10 | S11-targeted gate（clipping、exact gradients、SVD、oracle、low-D SPSA、S11 head） | ✅ 完成；**S11 head negative gate，停止** |
+
+**当前最佳 one-shot policy**：Stage 9 full-8000 refined policy
+- validation mean **14.66 dB**，median 14.83，P90 16.74；
+- pass **0/1000**；S21 已基本解决，两个 S11 requirements 仍 0% pass；
+- Stage 10 的 exact oracle 证明 S11 有低维下降路径，但当前 S11 head 没有学会。
 
 **最终参考模型**：Route 3（Delay-FNO）+ **R3 raw+Tukey(α=0.25) + 32 modes**  
 - 3,275,325 参数；
@@ -1643,6 +1676,9 @@ d=1  33.6%    d=4  75.5%    d=8  94.1%
 d=9  95.7%    d=12 98.2%    d=16 99.5%
 ```
 
+95% energy rank：**9**。因此 `B11` 取 **d=9**。
+
+**Q5：S11 action space 非常低维，9 维足够解释 95%。**
 
 ### 19.5 Exact oracle（Q6/Q7）
 
@@ -1720,8 +1756,120 @@ S11 head：Stage 9 encoder latent → Linear 256/GELU/ResFC → `c∈R^9`，zero
   而不是增加数据或换 representation。
 
 
-95% energy rank：**9**。因此 `B11` 取 **d=9**。
+---
 
-**Q5：S11 action space 非常低维，9 维足够解释 95%。**
+## 20. 2026-11-18 封存与恢复清单
 
-- 剩余核心问题是 **S11 compliance**，不是 mean miss；下一步应做 S11-weighted objective 或 very controlled last-stage unfreeze。
+### 20.1 一句话状态
+
+> Stage 1–10 已完成；Stage 9 的 refined policy 是当前最佳（validation **14.66 dB / pass 0**）；
+> Stage 10 证明 S11 有低维 exact-gradient 下降路径，但 S11-specific head 失败；
+> **现在停止，不解冻 encoder，等待新的明确指令。**
+
+### 20.2 本次真正新增的东西
+
+| 类型 | 文件 | 说明 |
+|---|---|---|
+| 代码 | `scripts/stage10_study.py` | `audit / gradients / oracle / lowd / s11head / s11headfull / all` |
+| 结果 | `artifacts/stage10/clipping_audit.json` | Q1 |
+| 结果 | `artifacts/stage10/gradient_analysis.json` | Q2–Q5 |
+| 结果 | `artifacts/stage10/oracle.json` | Q6–Q7 |
+| 结果 | `artifacts/stage10/lowd_spsa.json` | Q8 |
+| 结果 | `artifacts/stage10/s11_head_training.json` | Q9 |
+| 文档 | `HANDOVER.md` §19/§20 | Stage 10 详情 + 本清单 |
+| 文档 | `README.md` | Stage 10 摘要 |
+
+本地生成、**未提交**（git-ignored）：
+
+```text
+artifacts/stage10/s11_gradients.npz
+artifacts/stage10/s11_head.pt
+artifacts/stage9/residual_head_full.pt
+runs/...
+cache/...
+```
+
+新机器/新 clone 只有 JSON 结果，没有 `.pt/.npz`；需要时用脚本重跑或从本机拷贝。
+不要把 `/tmp/*.log` 当成交付物。
+
+### 20.3 当前结果的准确表述
+
+- Stage 9 positive gate：tune mean 20.38→13.70，validation 21.56→**14.66 dB**（P90 16.74），
+  但 **pass 0/1000**；S21 基本解决，**两个 S11 requirements 均 0% pass**。
+- Stage 10 oracle gate：
+  - 单步 full41 / B11：S11 **10.86 / 11.08**（32 states，eta=0.02）；
+  - 8-step full41：S11 **12.62→8.10**，overall **14.19→9.34**，S21 **0.634→0.025**；
+  - Gate C/D 通过；Gate A（S11<8）与 B（S11 pass>0）没有通过。
+- Stage 10 S11 head：
+  - tune 1000：S11 **12.87→12.69**，overall **14.15→13.98**，pass **0**；
+  - 动作幅度过小：`mean |c| = 0.062`，P90 0.147；
+  - **negative gate**；因此没有 full-8000 head、没有 validation、没有 unfreeze。
+- Stage 10 simulator calls：**67,664**（明细见 §19.9）。
+
+### 20.4 新对话的下一步（按优先级）
+
+**不要直接跑 `s11headfull`，也不要直接 partial unfreeze。**
+
+1. **先诊断 S11 head 为什么动作小（推荐）**
+   - 检查 `stage_s11head()` 的 loss 各项、`c` 的分布、梯度是否被 trust/边界项压制；
+   - 仍只使用 train-tune **7000:7999**；
+   - 可试一个受控变体（只选一个）：
+     - lr `3e-4` + 300 steps；或
+     - 去掉/降低 `lam_trust`，检查 `c` 是否能自然增大；或
+     - 用 S11-specific feature（例如 per-band margin / band-wise pooling），但不要换 FNO。
+   - 通过条件仍是原 gate：S11 mean 明显下降，或出现 **S11 pass>0**。
+2. **只有 head gate 通过后**：
+   - 跑 `s11headfull`（full 0:7999）；
+   - validation 1000:1999 **只评估一次**；
+   - 冻结后再考虑 internal test 30000–30999。
+3. **只有 full head 仍正、且明确需要时**：
+   - 才考虑 controlled partial unfreeze（last FNO block + aggregation + S11 head；
+     encoder lr = 0.1×head lr）；
+   - 必须重新走 gate，不可直接上 validation。
+4. 如果不想继续模型研究：直接进入报告/答辩材料整理，保留 Stage 9 结果作为最终 policy。
+
+### 20.5 复现命令
+
+```bash
+cd /home/qian/DL_assignment_2026
+source .venv/bin/activate
+export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+
+# 只跑已完成的单阶段（按需）
+python scripts/stage10_study.py audit
+python scripts/stage10_study.py gradients
+python scripts/stage10_study.py oracle
+python scripts/stage10_study.py lowd
+python scripts/stage10_study.py s11head
+
+# 禁止直接跑 all：all 会包含 s11headfull
+```
+
+注意：
+
+- `all` 会执行 `s11headfull`，当前 gate 未通过，**不要用**。
+- 多进程 simulator 必须设置单线程 BLAS，否则会线程超订。
+- GitHub 推送需要代理 `http://127.0.0.1:7890`。
+- `scripts/stage10_study.py` 的 S11 head 超参目前是函数内硬编码；
+  若要试 lr/步数变体，先改函数参数，避免覆盖现有 `s11_head_training.json` 前没有备份。
+
+### 20.6 不可违反的约束（再次强调）
+
+- 不新增 simulator state / seed；不使用 public seeds 10000–10049。
+- 不重新优化 anchor。
+- 不训练 FNO / Transformer / 新 representation；本阶段只做 S11 head/诊断。
+- 不在 validation 上拟合或反复调参；validation 只在冻结后评估一次。
+- 没有 S11-head positive gate，不做 partial encoder unfreeze。
+- 不把 `runs/`、`cache/`、`.pt`、`.npz` 误提交；JSON 结果才是可移植交付物。
+
+### 20.7 给新对话的起始提示
+
+可以直接把下面这段发给新对话：
+
+```text
+继续 CM19 项目。先读 HANDOVER.md 的「立即恢复」、§18、§19、§20。
+当前 Stage 10 已封存：Stage 9 policy 是当前最佳（validation 14.66 dB，pass 0）；
+Stage 10 S11 head 失败（S11 12.69，pass 0，c 幅度仅 0.062），所以没有 full head、
+没有 unfreeze。不要跑 s11headfull，不要重优化 anchor，不要新增 state/seed。
+下一步只在 train-tune 7000:7999 诊断 S11 head 的动作幅度/优化问题。
+```
