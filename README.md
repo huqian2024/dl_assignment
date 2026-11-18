@@ -50,6 +50,14 @@ raw S (B, 4, 2001)  ->  delta_m (B, 41)
   not accurate enough (Z1 R² 0.02–0.06; Z2 R² 0.44), `r0/r_floor ≈ 1`, Jacobian
   quality is poor, and refinement leaves true physical MAE at ~0.0233 (no
   `<0.018` gate). No validation one-shot was run; no learned unrolling.
+- **Stage 9 (smooth spec / zero-order residual policy)**: complete — smooth
+  seven-spec objective calibrated against the real simulator (Spearman 0.954),
+  coordinate-gradient checks (cosine stable across eps), one-step oracle
+  (20.01→17.79 dB), SPSA fidelity (K=16 cosine 0.539), and a frozen-base
+  residual head trained with simulator-in-the-loop SPSA. Full-8000 training
+  validation: mean **14.66 dB**, median 14.83, P90 16.74 (from 21.56/19.06/33.69),
+  but pass remains **0/1000**; both S11 requirements remain at 0% pass while
+  S21 is largely fixed. No encoder unfreeze was run.
 - **Final reference model**: R3 raw+Tukey(α=0.25), FNO 32 modes, 3.28M parameters.
   Validation MAE `0.0322`, one-shot pass rate `0/1000` (current known limitation).
 

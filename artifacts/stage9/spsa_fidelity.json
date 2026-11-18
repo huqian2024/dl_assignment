@@ -1,0 +1,24 @@
+{
+  "eps": 0.01,
+  "K": {
+    "4": {
+      "cosine_median": 0.2454636602922584,
+      "cosine_p10": 0.12536747477367977,
+      "sign_agreement_median": 0.5609756097560976,
+      "top5_overlap_median": 0.2
+    },
+    "8": {
+      "cosine_median": 0.4284408263799577,
+      "cosine_p10": 0.31935857724910244,
+      "sign_agreement_median": 0.6463414634146342,
+      "top5_overlap_median": 0.2
+    },
+    "16": {
+      "cosine_median": 0.5390757989058124,
+      "cosine_p10": 0.4412250823728282,
+      "sign_agreement_median": 0.6585365853658537,
+      "top5_overlap_median": 0.4
+    }
+  },
+  "simulator_calls": 896
+}

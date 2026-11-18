@@ -1417,4 +1417,155 @@ Z1 出现 surrogate exploitation
 - 已完成 Z1/Z2 forward surrogate、surrogate floor、Jacobian quality、Adam、LM、true-state evaluation。
 - 未进行 full-validation one-shot（gate 未通过）。
 - **未新增任何 state，未使用新 seed/public seeds，未重优化 anchor，未训练 FNO/Transformer。**
+
+
+---
+
+## 18. Stage 9 — smooth specification objective + zero-order residual policy
+
+### 18.1 范围与 base policy
+
+- base：已有 TorchScript-compatible Route 3 raw+Tukey FNO m32（`runs/route3_modes/r3_m32_s2026/best.pt`）。
+- 只使用已有 train 8000 / validation 1000；模拟器只对 cached `m_current` 的 candidate corrected vector 调用。
+- 没有新增 state / seed / public seed；没有重优化 anchor；没有 FNO/Transformer 训练。
+- 训练 split：tune 阶段 train 0:6999 / tune 7000:7999；positive gate 后用 full 0:7999 重训 residual head。
+- residual head zero-init；base encoder 完全冻结。`Δm = Δm_base + r ⊙ δu`。
+
+### 18.2 Smooth objective calibration（Q1）
+
+64 个 tune states；smooth seven-spec loss vs 真实 `max_spec_miss_db`：
+
+| tau | beta | tau_w | Pearson | Spearman |
+|---:|---:|---:|---:|---:|
+| **0.10** | **0.50** | **0.25** | **0.9865** | **0.9543** |
+
+Base 在这 64 个 tune states：mean 20.40 dB、median 18.66、P90 25.74、pass 0。
+
+**Q1：** smooth loss 与 hard miss 高度相关，objective 可用于训练。
+
+### 18.3 Coordinate gradient / oracle（Q2/Q3）
+
+16 个 tune states，coordinate finite difference：
+
+| eps | gradient norm mean | norm P90 |
+|---:|---:|---:|
+| 0.005 | 22.84 | 35.87 |
+| 0.010 | 34.63 | 98.57 |
+| 0.020 | 46.19 | 130.07 |
+
+不同 eps 的 gradient cosine median **0.99998**（P10 0.9972）→ 极稳定。
+
+One-step exact coordinate-gradient oracle（g010）：
+
+| eta | mean miss | median | P90 | improved fraction |
+|---:|---:|---:|---:|---:|
+| base | 20.01 | 18.58 | 19.55 | — |
+| **0.05** | **17.79** | **17.53** | **19.99** | **0.625** |
+| 0.10 | 25.47 | 18.31 | 42.69 | 0.438 |
+| 0.20 | 32.28 | 24.45 | 53.24 | 0.188 |
+| 0.50 | 50.44 | 50.43 | 68.89 | 0.063 |
+
+**Q2：coordinate gradient 稳定。**  
+**Q3：一步 oracle 有真实下降方向，但步长必须小（eta=0.05）。**
+
+### 18.4 SPSA fidelity（Q4）
+
+16 states，eps=0.01：
+
+| K | cosine median | cosine P10 | sign agreement | top-5 overlap |
+|---:|---:|---:|---:|---:|
+| 4 | 0.245 | 0.125 | 0.561 | 0.2 |
+| 8 | 0.428 | 0.319 | 0.646 | 0.2 |
+| **16** | **0.539** | **0.441** | **0.659** | **0.4** |
+
+**Q4：** K=16 刚超过最低 cosine gate（>0.5），因此用于 residual-head 训练；K=4/8 不足。
+
 - Stage 8 停止；不应把“更多数据”写成 recommendation。
+
+
+
+### 18.5 Residual-head simulator-in-loop（Q5/Q6/Q7）
+
+200 optimizer steps，batch=16，K=16，eps=0.01，lr=1e-4；AdamW；λ_bound=λ_trust=1e-3。
+
+| split | base mean | refined mean | median | P90 | worst | pass |
+|---|---:|---:|---:|---:|---:|---:|
+| tune 1000 | 20.38 | **13.70** | 13.84 | 16.02 | 19.39 | 0 |
+| validation 1000 | 21.56 | **14.66** | 14.83 | 16.74 | 18.43 | 0 |
+
+Tune step-200 subset-64：mean 13.54、P90 15.13、pass 0。  
+Validation gate：**mean < 17 dB 通过；P90 < 20 dB 通过；pass 仍为 0。**
+
+Per-requirement validation：
+
+| requirement | base pass | refined pass | refined mean miss |
+|---|---:|---:|---:|
+| S11_1 | 0.0% | **0.0%** | 13.37 dB |
+| S11_2 | 0.0% | **0.0%** | 13.44 dB |
+| S21_1 | 6.9% | 80.4% | 0.12 dB |
+| S21_2 | 0.0% | 41.4% | 0.40 dB |
+| S21_3 | 9.7% | 62.0% | 0.26 dB |
+| S21_4 | 0.1% | 36.6% | 0.60 dB |
+| S21_5 | 7.2% | 66.8% | 0.27 dB |
+
+**Q5：** refined mean 从 20.38→13.70（tune）、21.56→14.66（validation），median/P90 同步大幅下降；  
+**Q6：** 仍然 **pass=0**。  
+**Q7：** S11 是唯一剩余瓶颈；S21 已大幅改善，两条 S11 requirement 仍 0% pass、mean miss 约 13.4 dB。
+
+Residual magnitude（validation）：mean |δu| **0.862**，P90 **1.702**；tune 为 1.294 / 2.698。  
+Specification-gradient top parameters（base coordinate gradient）：**19, 26, 25, 17, 16, 28, 7, 21, 20, 18**。
+
+
+
+### 18.6 Q8 — best validation one-shot
+
+Residual-head full-8000 model on validation 1000：
+
+```text
+pass        0/1000 (0%)
+mean miss   14.66 dB
+median      14.83 dB
+P90         16.74 dB
+worst       18.43 dB
+```
+
+这比 Stage 6 ResMLP（mean 18.96、P90 19.59）明显更好，但仍没有 all-seven pass；
+剩余 miss 完全由 S11 的两个 requirement 决定。
+
+### 18.7 Q9 — 是否解冻 encoder？
+
+Residual-head positive gate 已通过（mean<17、P90<20），因此根据 Stage 9 规则，
+**partial encoder unfreeze 是允许的**；但本阶段**没有执行**，因为当前 evidence 指向更具体的方向：
+
+- 残余误差集中在 **S11**；S21 已基本解决；
+- generic unfreeze 很可能继续优化已经较好的 S21，而不是 S11；
+- 更合理的第一步是 **S11-weighted residual objective**（λ_S11>1）或 S11-specific head，
+  再考虑 only last FNO block + aggregation + residual head 的 controlled unfreeze。
+
+**Q9 结论：** 值得做的是 **S11-targeted residual / controlled last-stage unfreeze**，  
+而不是全 encoder unfreeze；本阶段在 residual-head positive gate 后停止。
+
+### 18.8 Simulator-call accounting
+
+Core final artifacts：
+
+| phase | calls |
+|---|---:|
+| smooth calibration (64 states) | 64 |
+| coordinate gradient (16 states × 3 eps × 82) | 3,936 |
+| one-step oracle (16 × (1+4)) | 80 |
+| SPSA fidelity (16 × (4+8+16) × 2) | 896 |
+| tune residual training (200 × 512 + evals) | 104,656 |
+| tune analysis | 2,000 |
+| full residual training (200 × 512 + evals) | 104,656 |
+| validation analysis | 2,000 |
+| **total core** | **≈218,288** |
+
+另有 2-step smoke / 早期探索约 2k calls；未计入 core 表。没有新增 simulator state。
+
+### 18.9 Stop
+
+- 已完成 smooth calibration、coordinate gradient、oracle、SPSA fidelity、residual-head tune/full training、validation one-shot。
+- **未新增 state / seed / public seed；未重优化 anchor；未训练 FNO/Transformer。**
+- 没有执行 partial encoder unfreeze；本阶段在 residual-head positive gate 后停止。
+- 剩余核心问题是 **S11 compliance**，不是 mean miss；下一步应做 S11-weighted objective 或 very controlled last-stage unfreeze。
