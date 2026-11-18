@@ -1285,4 +1285,136 @@ canonical state-space / Loewner 路线**；那会是 speculative 的下一步，
   complex probes、quadratic、residual structure、validation one-shot。
 - **未新增任何 state，未使用新 seed/public seeds，未重优化 anchor，未训练 FNO/Transformer。**
 - Stage 7 没有超过 Stage 6；停止。若未来继续，应先解决 one-shot 精度门槛与 compliance sensitivity，
+
+
+---
+
+## 17. Stage 8 — learned forward surrogate / numerical refinement gate
+
+### 17.1 范围与 split
+
+- 只使用已有 train 8000 / validation 1000；未 sample_state、未新增 seed、未 public seeds、未重优化 anchor。
+- forward model 与 initializer 只用 **train 0:6999** 拟合；**train 7000:7999** 只做 architecture/early-stop/solver tuning。
+- validation 未参与任何拟合或 solver 选择。
+- Z1 = raw response PCA latent（K=256/512）；PCA 只用 train 0:6999 拟合，tune 7000:7999 只做投影。
+- Z2 = rational PCA256 + raw PCA64（冻结的 Stage 6/7 latent，仅作研究诊断；其无监督变换在 train 8000 上拟合过，但未使用 tune/validation 标签）。
+- 初始化器固定为 Z2 feature + Global Ridge，tune normalized MAE **0.18000**、physical MAE **0.02347**。
+
+### 17.2 Forward surrogate（Q1）
+
+| observation | model | latent RMSE | mean R² | median R² | P10 R² |
+|---|---|---:|---:|---:|---:|
+| Z1-256 | Linear | 0.991 | 0.057 | 0.00 | −0.01 |
+| Z1-256 | ResMLP | 0.991 | 0.057 | −0.01 | −0.05 |
+| Z1-512 | Linear | 1.041 | 0.027 | −0.01 | −0.01 |
+| Z1-512 | ResMLP | 1.046 | 0.018 | −0.02 | −0.04 |
+| Z2-320 | Linear | 0.896 | 0.189 | 0.136 | 0.025 |
+| Z2-320 | ResMLP | **0.746** | **0.435** | 0.447 | 0.088 |
+
+Z1 的 raw reconstruction（从 predicted PCA latent 重建）：
+
+| K | reconstruction relL2 | dB median | dB P90 | spec error median | spec P90 |
+|---:|---:|---:|---:|---:|---:|
+| 256 | 0.319 | 1.36 | 11.92 | 19.87 dB | 34.56 |
+| 512 | 0.327 | 1.39 | 12.00 | 19.79 dB | 33.62 |
+
+**Q1 结论：** 现有 forward surrogate **并不准确**。Z1 的 latent R² 只有 0.02–0.06，
+raw reconstruction relL2 ≈0.32–0.33；Z2 的 ResMLP 好一些（R² 0.435），但仍不是可用的 forward model。
+因此 Stage 8 的负结果**不能**直接解释为 inverse 难度，首先是 forward surrogate 本身没学好。
+
+### 17.3 Surrogate floor（Q2）
+
+| observation | r_floor median | r0 median | r0/r_floor median | P90 |
+|---|---:|---:|---:|---:|
+| Z1-256 | 15.34 | 15.24 | **0.994** | 1.012 |
+| Z1-512 | 21.76 | 21.71 | **0.996** | 1.006 |
+| Z2-320 | 11.37 | 11.91 | **1.044** | 1.160 |
+
+**Q2 结论：** `r0 ≈ r_floor`，initializer 已经落在 learned surrogate 的误差底线上；
+没有可用的 refinement signal。这是 Stage 8 最重要的 stop gate。
+
   而不是继续更换 feature compression。
+
+
+
+### 17.4 Learned Jacobian quality（Q3）
+
+参数空间 nearest pairs（256 tune states，δu norm median 2.245）：
+
+| observation | cosine median | cosine P10 | relative L2 median | explained fraction median |
+|---|---:|---:|---:|---:|
+| Z1-512 | 0.132 | 0.082 | 0.994 | 0.011 |
+| Z2-320 | 0.399 | 0.254 | 1.102 | −0.216 |
+
+**Q3 结论：** learned Jacobian 不能预测真实 local `Δz`；Z1 基本无方向一致性，Z2 也只有中等 cosine，
+explained fraction 接近 0 或为负。Jacobian 不足以支持 LM/refinement。
+
+### 17.5 Adam / LM refinement（Q4/Q5）
+
+Initializer：normalized MAE **0.18000**，physical MAE **0.02347**，mean R² 0.567。
+
+| observation | solver | best setting | true normalized MAE | physical MAE | mean R² |
+|---|---|---|---:|---:|---:|
+| Z1-512 | Adam | steps5, lr1e-2 | 0.18366 | 0.02415 | 0.559 |
+| Z1-512 | LM | iter1, damp1 | 0.21366 | 0.02807 | 0.368 |
+| Z1-512 | Adam weighted | steps5, lr1e-2 | 0.18293 | 0.02404 | 0.562 |
+| Z2-320 | Adam | steps5, lr1e-2 | 0.17770 | 0.02330 | 0.585 |
+| Z2-320 | LM | iter1, damp1 | 0.17993 | 0.02340 | 0.538 |
+| Z2-320 | Adam weighted | steps5, lr1e-2 | **0.17768** | **0.02329** | **0.585** |
+
+- Z1 的 refinement **变差**；LM 更差。
+- Z2 的 Adam 仅有 **0.00015 physical MAE** 的改善，远未达到 Stage 8 的 `<0.018` gate。
+- 加权只是为了很小改善；没有出现 `0.023 → <0.018` 的跃迁。
+
+**Q4/Q5 结论：Adam 与 LM 都没有降低 true state error 到有意义的程度；LM 更不稳定。**
+
+### 17.6 Surrogate exploitation（Q6）
+
+| observation | r0 median | r_ref median | true MAE initial → refined | exploitation |
+|---|---:|---:|---|---|
+| Z1-512 | 21.71 | 21.49 | 0.18000 → 0.18366 | **True** |
+| Z2-320 | 11.91 | 10.83 | 0.18000 → 0.17770 | False |
+
+Z1 出现典型的 surrogate exploitation：surrogate residual 略降，但 true parameter error 变差。
+Z2 没有触发 flag，但真实改善极小，不能视为成功。
+
+### 17.7 Weak / dangerous parameters（Q7）
+
+Z2-320 Adam 的 weak R²：
+`21 0.155, 23 0.213, 26 0.147, 31 0.248`，相对 initializer
+`0.141/0.190/0.139/0.239` 只有极小变化。  
+Z1 refinement 的 weak R² 反而下降。Dangerous parameters 也没有出现可用改善；
+physical dangerous MAE/P95 仍在 0.023–0.028 / 0.067–0.078 量级。
+
+### 17.8 One-shot（Q8）
+
+Stage 8 gate 未通过（best physical MAE 0.02329，远高于 0.018），因此**没有**重训 full-8000
+forward/initializer，也没有跑 validation one-shot。当前 best one-shot 仍是 Stage 6：
+
+```text
+ResMLP: pass 0/1000, mean 18.96 dB, median 18.13, P90 19.59, worst 54.83
+```
+
+**Q8：** 不适用/未执行；没有新的 one-shot 结果，不能声称 learned-forward refinement 改善了 control。
+
+### 17.9 Q9 — 是否值得进入 learned unrolled refinement？
+
+**不值得。** Stage 8 的 gate 是：
+
+```text
+forward surrogate 不够准确
+r0 / r_floor ≈ 1
+Jacobian 不具备局部预测力
+Adam/LM true state error 不降
+Z1 出现 surrogate exploitation
+```
+
+因此不应训练 `u_{k+1}=u_k+Rθ(u_k,z_obs-G(u_k))`，也不应把 learned-forward inversion 作为下一阶段默认方向。
+这不是“inverse 不可能”的证明；更准确的结论是：**当前 learned forward surrogate 本身不足以提供 refinement signal**。
+
+### 17.10 Stop
+
+- 已完成 Z1/Z2 forward surrogate、surrogate floor、Jacobian quality、Adam、LM、true-state evaluation。
+- 未进行 full-validation one-shot（gate 未通过）。
+- **未新增任何 state，未使用新 seed/public seeds，未重优化 anchor，未训练 FNO/Transformer。**
+- Stage 8 停止；不应把“更多数据”写成 recommendation。

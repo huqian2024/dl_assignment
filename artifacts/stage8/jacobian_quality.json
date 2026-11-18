@@ -1,0 +1,22 @@
+{
+  "z1_512": {
+    "pairs": 256,
+    "cosine_median": 0.13215327262878418,
+    "cosine_p10": 0.08201063424348831,
+    "relative_l2_median": 0.9943885803222656,
+    "explained_fraction_median": 0.011013567447662354,
+    "explained_fraction_p10": -0.014836013317108154,
+    "du_norm_median": 2.2452120780944824,
+    "du_norm_p90": 2.4550297260284424
+  },
+  "z2_320": {
+    "pairs": 256,
+    "cosine_median": 0.3988877832889557,
+    "cosine_p10": 0.2542736530303955,
+    "relative_l2_median": 1.1024169921875,
+    "explained_fraction_median": -0.21592283248901367,
+    "explained_fraction_p10": -0.9808107614517212,
+    "du_norm_median": 2.2452120780944824,
+    "du_norm_p90": 2.4550297260284424
+  }
+}

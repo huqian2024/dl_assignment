@@ -44,6 +44,12 @@ raw S (B, 4, 2001)  ->  delta_m (B, 41)
   Stage 6's rational+raw V4 (0.02329). PLS, probes and quadratic did not help;
   best Stage 7 one-shot is 19.83 dB mean miss (0% pass), so no canonical/Loewner
   transition is justified.
+- **Stage 8 (learned forward / refinement gate)**: complete — raw-PCA (K=256/512)
+  and rational+raw forward surrogates, 7000/1000 train split, surrogate-floor
+  and Jacobian tests, Adam and LM/tanh refinement. The forward surrogate is
+  not accurate enough (Z1 R² 0.02–0.06; Z2 R² 0.44), `r0/r_floor ≈ 1`, Jacobian
+  quality is poor, and refinement leaves true physical MAE at ~0.0233 (no
+  `<0.018` gate). No validation one-shot was run; no learned unrolling.
 - **Final reference model**: R3 raw+Tukey(α=0.25), FNO 32 modes, 3.28M parameters.
   Validation MAE `0.0322`, one-shot pass rate `0/1000` (current known limitation).
 
