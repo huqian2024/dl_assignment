@@ -13,6 +13,10 @@ raw S (B, 4, 2001)  ->  delta_m (B, 41)
   composable ResNet/FNO/pooling/head, four routes, training/eval/export, 22 unit tests.
 - **Stage 2 (Route 3 research)**: complete — delay representations R1/R2/R3,
   FNO modes 32/64/96/128, state-error and failure analysis.
+- **Stage 3 (pairwise/observable control)**: complete — response PCA, local
+  Jacobian spectrum, observable subspace, linear differential controllers.
+  Result: no usable signal (0% pass, mean miss ≈20.6 dB), so no neural
+  controller was trained.
 - **Final reference model**: R3 raw+Tukey(α=0.25), FNO 32 modes, 3.28M parameters.
   Validation MAE `0.0322`, one-shot pass rate `0/1000` (current known limitation).
 
@@ -40,7 +44,7 @@ OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
 | Path | Purpose |
 |---|---|
 | `assignments/` | Provided assignment materials (simulator, notebook, design CSVs) |
-| `solution/` | Core library (data, DSP, blocks, encoders, pooling, heads, models, trainer, evaluator, export, analysis) |
+| `solution/` | Core library (data, DSP, blocks, encoders, pooling, heads, models, trainer, evaluator, export, analysis, pairwise control) |
 | `configs/` | JSON route/experiment configurations |
 | `scripts/` | Data, anchor, train, evaluate, export, analyze, smoke-test CLIs |
 | `tests/` | Unit tests (`unittest`) |

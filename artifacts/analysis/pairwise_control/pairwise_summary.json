@@ -1,0 +1,1795 @@
+{
+  "pca_cumulative": {
+    "64": 0.9565306305885315,
+    "128": 0.9917358756065369,
+    "256": 0.9990553855895996,
+    "512": 0.9999474287033081
+  },
+  "spectrum_K512": {
+    "singular_values": [
+      21.220592152075433,
+      16.296987958962145,
+      13.378823336873992,
+      11.901453299606993,
+      10.063681996967512,
+      9.620128902430759,
+      8.741233249975911,
+      8.079963809821054,
+      7.750414107451287,
+      7.528999907859759,
+      7.2535075345685796,
+      6.905226013525628,
+      6.496307736917145,
+      5.762024657631655,
+      5.249558971879309,
+      5.014120581012387,
+      4.001829077172514,
+      3.880688766013574,
+      3.774424341412678,
+      2.921580009500151,
+      2.5935371159544514,
+      2.5118317169952826,
+      2.0468534396078053,
+      1.855321475036619,
+      1.5895028227392398,
+      1.4245452440382935,
+      1.1639623146044333,
+      0.8881973304143315,
+      0.8501970119003494,
+      0.8126681271613417,
+      0.6247821483593283,
+      0.5500491760932942,
+      0.5211018795804085,
+      0.45778775480603545,
+      0.41768788959974645,
+      0.359961765441559,
+      0.3109150933777565,
+      0.27432930018409285,
+      0.271674692537819,
+      0.2213661603542075,
+      0.20105439939567593
+    ],
+    "cumulative_squared_energy": [
+      0.24994717954700646,
+      0.3973643030435801,
+      0.4967145798504739,
+      0.5753346156025299,
+      0.6315489474882635,
+      0.6829172276967701,
+      0.7253282422220445,
+      0.7615652287481183,
+      0.7949065693889529,
+      0.8263701269928947,
+      0.8555732552863612,
+      0.8820392998395838,
+      0.9054635891199452,
+      0.9238918125114313,
+      0.9391878479448175,
+      0.9531426214154111,
+      0.9620315683652837,
+      0.9703905018651464,
+      0.9782979197750353,
+      0.9830356334654522,
+      0.9867691508546146,
+      0.9902711361916263,
+      0.9925965847535996,
+      0.9945071927292831,
+      0.9959095408936444,
+      0.9970359229869069,
+      0.9977879112847096,
+      0.9982257883214299,
+      0.9986269989152481,
+      0.9989935712600109,
+      0.9992102371113357,
+      0.9993781702017984,
+      0.999528892852276,
+      0.9996452147789132,
+      0.999742050816532,
+      0.9998139702056205,
+      0.9998676260278111,
+      0.9999093972934787,
+      0.9999503640529325,
+      0.9999775632264575,
+      1.0000000000000002
+    ],
+    "condition_number": 105.54651982677194,
+    "holdout_dz_normalized_rmse": 0.7870350740176111
+  },
+  "pair_analysis": {
+    "counts": {
+      "train": 351988,
+      "val": 43996
+    },
+    "by_type": {
+      "train": {
+        "local": {
+          "count": 128000,
+          "u_distance_mean": 2.4582338333129883,
+          "u_distance_median": 2.4585418701171875,
+          "z_distance_mean": 24.452245712280273,
+          "z_distance_median": 24.357948303222656,
+          "ambiguous_fraction": 0.001171875,
+          "ambiguous_count": 150,
+          "corr_u_z": 0.23036347359994952
+        },
+        "response_local": {
+          "count": 128000,
+          "u_distance_mean": 3.134779930114746,
+          "u_distance_median": 3.12275767326355,
+          "z_distance_mean": 18.9196720123291,
+          "z_distance_median": 18.866436004638672,
+          "ambiguous_fraction": 0.0015859375,
+          "ambiguous_count": 203,
+          "corr_u_z": 0.1269119793113665
+        },
+        "medium": {
+          "count": 32000,
+          "u_distance_mean": 3.8215906620025635,
+          "u_distance_median": 3.8172664642333984,
+          "z_distance_mean": 29.85028076171875,
+          "z_distance_median": 29.785757064819336,
+          "ambiguous_fraction": 0.00128125,
+          "ambiguous_count": 41,
+          "corr_u_z": 0.19118300338055477
+        },
+        "random": {
+          "count": 63988,
+          "u_distance_mean": 3.612492322921753,
+          "u_distance_median": 3.606949806213379,
+          "z_distance_mean": 29.133411407470703,
+          "z_distance_median": 29.040359497070312,
+          "ambiguous_fraction": 0.00037507032568606614,
+          "ambiguous_count": 24,
+          "corr_u_z": 0.37298651595663734
+        }
+      },
+      "val": {
+        "local": {
+          "count": 16000,
+          "u_distance_mean": 2.6802518367767334,
+          "u_distance_median": 2.6853439807891846,
+          "z_distance_mean": 25.52465057373047,
+          "z_distance_median": 25.44921112060547,
+          "ambiguous_fraction": 0.0013125,
+          "ambiguous_count": 21,
+          "corr_u_z": 0.22509458731152068
+        },
+        "response_local": {
+          "count": 16000,
+          "u_distance_mean": 3.223334550857544,
+          "u_distance_median": 3.211097240447998,
+          "z_distance_mean": 20.920663833618164,
+          "z_distance_median": 20.884933471679688,
+          "ambiguous_fraction": 0.001375,
+          "ambiguous_count": 22,
+          "corr_u_z": 0.13292538108131097
+        },
+        "medium": {
+          "count": 4000,
+          "u_distance_mean": 3.797611713409424,
+          "u_distance_median": 3.787933826446533,
+          "z_distance_mean": 29.881000518798828,
+          "z_distance_median": 29.81576156616211,
+          "ambiguous_fraction": 0.00175,
+          "ambiguous_count": 7,
+          "corr_u_z": 0.17686202888879482
+        },
+        "random": {
+          "count": 7996,
+          "u_distance_mean": 3.5895965099334717,
+          "u_distance_median": 3.576951742172241,
+          "z_distance_mean": 29.139650344848633,
+          "z_distance_median": 29.079490661621094,
+          "ambiguous_fraction": 0.00037518759379689845,
+          "ambiguous_count": 3,
+          "corr_u_z": 0.3648987815055064
+        }
+      }
+    }
+  },
+  "residual_projection": {
+    "source_residual": "/home/qian/DL_assignment_2026/artifacts/analysis/final_m32/validation/residuals.npz",
+    "best_K": 128,
+    "num_states": 1000,
+    "pass_rate": 0.0,
+    "by_r": {
+      "8": {
+        "observable_energy": 0.4296662967575354,
+        "weak_energy": 4.018984185067893,
+        "observable_fraction": 0.09658351414949304,
+        "weak_fraction": 0.9034164858505066,
+        "corr_miss_vs_observable_norm": 0.1288265920013283,
+        "corr_miss_vs_weak_norm": 0.2239531993328931,
+        "mean_miss_top_quartile_observable": 22.182553532738687,
+        "mean_miss_top_quartile_weak": 23.263256050798894
+      },
+      "12": {
+        "observable_energy": 0.7186542589976694,
+        "weak_energy": 3.7299962228277592,
+        "observable_fraction": 0.16154432943960606,
+        "weak_fraction": 0.8384556705603936,
+        "corr_miss_vs_observable_norm": 0.14732167740410676,
+        "corr_miss_vs_weak_norm": 0.21566228752030162,
+        "mean_miss_top_quartile_observable": 21.859653918411734,
+        "mean_miss_top_quartile_weak": 23.19628668435812
+      },
+      "16": {
+        "observable_energy": 1.0742124516342064,
+        "weak_energy": 3.3744380301912225,
+        "observable_fraction": 0.24146928512878385,
+        "weak_fraction": 0.7585307148712159,
+        "corr_miss_vs_observable_norm": 0.15982817070617558,
+        "corr_miss_vs_weak_norm": 0.204371822790021,
+        "mean_miss_top_quartile_observable": 22.237702404820922,
+        "mean_miss_top_quartile_weak": 23.052534916412828
+      },
+      "20": {
+        "observable_energy": 1.4868689209198505,
+        "weak_energy": 2.961781560905577,
+        "observable_fraction": 0.33422920658620464,
+        "weak_fraction": 0.6657707934137947,
+        "corr_miss_vs_observable_norm": 0.1855329484660419,
+        "corr_miss_vs_weak_norm": 0.18784404823631748,
+        "mean_miss_top_quartile_observable": 22.52956723785162,
+        "mean_miss_top_quartile_weak": 22.735736669609548
+      },
+      "24": {
+        "observable_energy": 1.9443196106936689,
+        "weak_energy": 2.5043308711317587,
+        "observable_fraction": 0.4370582986092109,
+        "weak_fraction": 0.5629417013907885,
+        "corr_miss_vs_observable_norm": 0.20909292214066877,
+        "corr_miss_vs_weak_norm": 0.16216841715231836,
+        "mean_miss_top_quartile_observable": 22.779615462203022,
+        "mean_miss_top_quartile_weak": 22.474951251466276
+      },
+      "32": {
+        "observable_energy": 3.0623531953647496,
+        "weak_energy": 1.3862972864606766,
+        "observable_fraction": 0.6883780166312737,
+        "weak_fraction": 0.31162198336872543,
+        "corr_miss_vs_observable_norm": 0.2280617803205951,
+        "corr_miss_vs_weak_norm": 0.11582843144002326,
+        "mean_miss_top_quartile_observable": 23.086313664152623,
+        "mean_miss_top_quartile_weak": 21.945125582749842
+      },
+      "41": {
+        "observable_energy": 4.448650481825427,
+        "weak_energy": 9.262759963034909e-30,
+        "observable_fraction": 0.9999999999999994,
+        "weak_fraction": 2.0821505310154394e-30,
+        "corr_miss_vs_observable_norm": 0.23635760119128843,
+        "corr_miss_vs_weak_norm": 0.19454466775089985,
+        "mean_miss_top_quartile_observable": 23.255910135242935,
+        "mean_miss_top_quartile_weak": 22.802500736660956
+      }
+    }
+  },
+  "controller_pair_metrics_K512": {
+    "C1_local": {
+      "8": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.40344251168419976,
+        "val_c_normalized_rmse": 0.4039477724108528,
+        "val_du_full_rmse": 0.3890189532610107,
+        "val_dz_reconstruction_normalized_rmse": 0.816343374945195,
+        "val_dz_reconstruction_r2": 0.3335834941819181
+      },
+      "12": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.43962056573970815,
+        "val_c_normalized_rmse": 0.43784421223320824,
+        "val_du_full_rmse": 0.3741372380261802,
+        "val_dz_reconstruction_normalized_rmse": 0.7799298117487464,
+        "val_dz_reconstruction_r2": 0.3917094887444965
+      },
+      "16": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.47158679953284005,
+        "val_c_normalized_rmse": 0.4703546603996686,
+        "val_du_full_rmse": 0.3554920591218577,
+        "val_dz_reconstruction_normalized_rmse": 0.7502348556684432,
+        "val_dz_reconstruction_r2": 0.4371476613391615
+      },
+      "20": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.5660869297583265,
+        "val_c_normalized_rmse": 0.5669616137064344,
+        "val_du_full_rmse": 0.34672000501048,
+        "val_dz_reconstruction_normalized_rmse": 0.7341764649938441,
+        "val_dz_reconstruction_r2": 0.4609849182481959
+      },
+      "24": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.6390956635012138,
+        "val_c_normalized_rmse": 0.6421037004817457,
+        "val_du_full_rmse": 0.34237347374836485,
+        "val_dz_reconstruction_normalized_rmse": 0.7276674028179012,
+        "val_dz_reconstruction_r2": 0.4705001508753204
+      },
+      "32": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.7311080085954041,
+        "val_c_normalized_rmse": 0.7371849155937394,
+        "val_du_full_rmse": 0.3378920439852524,
+        "val_dz_reconstruction_normalized_rmse": 0.724907271546787,
+        "val_dz_reconstruction_r2": 0.4745094476576698
+      },
+      "41": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.7958630986707882,
+        "val_c_normalized_rmse": 0.8042510027332626,
+        "val_du_full_rmse": 0.3375656452270541,
+        "val_dz_reconstruction_normalized_rmse": 0.7245259490403524,
+        "val_dz_reconstruction_r2": 0.47506214916625455
+      }
+    },
+    "C2_local_response": {
+      "8": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.45645445839918974,
+        "val_c_normalized_rmse": 0.4479405972497099,
+        "val_du_full_rmse": 0.4433127732131166,
+        "val_dz_reconstruction_normalized_rmse": 0.8398675320219453,
+        "val_dz_reconstruction_r2": 0.29462252865400895
+      },
+      "12": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.48308610031594745,
+        "val_c_normalized_rmse": 0.47389445915483885,
+        "val_du_full_rmse": 0.42995867093069745,
+        "val_dz_reconstruction_normalized_rmse": 0.800305412832205,
+        "val_dz_reconstruction_r2": 0.3595112461902409
+      },
+      "16": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.505620701410968,
+        "val_c_normalized_rmse": 0.4988516329977874,
+        "val_du_full_rmse": 0.4112541154034545,
+        "val_dz_reconstruction_normalized_rmse": 0.7636885913343154,
+        "val_dz_reconstruction_r2": 0.41677973546468616
+      },
+      "20": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.6054356289348028,
+        "val_c_normalized_rmse": 0.6021545408783942,
+        "val_du_full_rmse": 0.4013993368168708,
+        "val_dz_reconstruction_normalized_rmse": 0.7442251172308016,
+        "val_dz_reconstruction_r2": 0.4461289748817333
+      },
+      "24": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.6807326312378936,
+        "val_c_normalized_rmse": 0.6801622188710909,
+        "val_du_full_rmse": 0.39618257091514075,
+        "val_dz_reconstruction_normalized_rmse": 0.7355572627573479,
+        "val_dz_reconstruction_r2": 0.4589555132038763
+      },
+      "32": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.7668102044919799,
+        "val_c_normalized_rmse": 0.7731646762848441,
+        "val_du_full_rmse": 0.39031265903848517,
+        "val_dz_reconstruction_normalized_rmse": 0.7315283308632892,
+        "val_dz_reconstruction_r2": 0.46486630114334015
+      },
+      "41": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.8272626790595482,
+        "val_c_normalized_rmse": 0.8381475383260191,
+        "val_du_full_rmse": 0.39026539690698053,
+        "val_dz_reconstruction_normalized_rmse": 0.7309885880871262,
+        "val_dz_reconstruction_r2": 0.4656556840853612
+      }
+    },
+    "C3_mixed": {
+      "8": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.4082764532107058,
+        "val_c_normalized_rmse": 0.4116705114871751,
+        "val_du_full_rmse": 0.4698441125282485,
+        "val_dz_reconstruction_normalized_rmse": 0.8146607810376029,
+        "val_dz_reconstruction_r2": 0.3363278118380173
+      },
+      "12": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.43984501510877577,
+        "val_c_normalized_rmse": 0.4421280928516353,
+        "val_du_full_rmse": 0.4543672141675372,
+        "val_dz_reconstruction_normalized_rmse": 0.7719300672204777,
+        "val_dz_reconstruction_r2": 0.4041239713199243
+      },
+      "16": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.4647804990456243,
+        "val_c_normalized_rmse": 0.4695293616265505,
+        "val_du_full_rmse": 0.4325652175022117,
+        "val_dz_reconstruction_normalized_rmse": 0.7322214388947017,
+        "val_dz_reconstruction_r2": 0.4638517644220148
+      },
+      "20": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.5653821394051523,
+        "val_c_normalized_rmse": 0.5743919990195405,
+        "val_du_full_rmse": 0.4212243833486935,
+        "val_dz_reconstruction_normalized_rmse": 0.7112919995685707,
+        "val_dz_reconstruction_r2": 0.49406369134884065
+      },
+      "24": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.6431213002080954,
+        "val_c_normalized_rmse": 0.6542645822388472,
+        "val_du_full_rmse": 0.41527835464580803,
+        "val_dz_reconstruction_normalized_rmse": 0.7022119990567697,
+        "val_dz_reconstruction_r2": 0.5068983083798144
+      },
+      "32": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.7343889722539529,
+        "val_c_normalized_rmse": 0.7520904254377669,
+        "val_du_full_rmse": 0.4088966800758061,
+        "val_dz_reconstruction_normalized_rmse": 0.6980877460495944,
+        "val_dz_reconstruction_r2": 0.5126734988145263
+      },
+      "41": {
+        "lambda": 0.01,
+        "holdout_c_normalized_rmse": 0.7999709393738704,
+        "val_c_normalized_rmse": 0.8210111241139136,
+        "val_du_full_rmse": 0.40861546270687954,
+        "val_dz_reconstruction_normalized_rmse": 0.6975622161963438,
+        "val_dz_reconstruction_r2": 0.5134069545343759
+      }
+    }
+  },
+  "grid_validation_subset": {
+    "C1_local": {
+      "8": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 33.14596552562118,
+        "median_max_miss_db": 32.79326187133789,
+        "p90_max_miss_db": 47.33132786560059,
+        "worst_max_miss_db": 68.95632934570312,
+        "correction_l2_mean": 0.14920827992106542,
+        "clipped_entry_rate_mean": 0.008861788617886179,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.455855204413336
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.37550278760493
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 16.01310641090075
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 23.54594737927119
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 14.441905560096105
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 21.60482505083084
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 10.852858363580703
+          }
+        },
+        "controller": "C1_local",
+        "r": 8,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.8678898231944016,
+        "anchor_dz_r2": 0.2467672547943882,
+        "pair_holdout_c_rmse": 0.40344251168419976,
+        "pair_val_c_rmse": 0.4039477724108528
+      },
+      "12": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 32.406853832771375,
+        "median_max_miss_db": 32.0006453704834,
+        "p90_max_miss_db": 46.39178916931152,
+        "worst_max_miss_db": 68.9782485961914,
+        "correction_l2_mean": 0.21224882854931892,
+        "clipped_entry_rate_mean": 0.007723577235772359,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.39320406958461
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.19700241188208
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 16.57097080249786
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 23.147641308705015
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 12.74827328411738
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 20.160177719593047
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 11.765667170079547
+          }
+        },
+        "controller": "C1_local",
+        "r": 12,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.8287427880779393,
+        "anchor_dz_r2": 0.3131853912077075,
+        "pair_holdout_c_rmse": 0.43962056573970815,
+        "pair_val_c_rmse": 0.43784421223320824
+      },
+      "16": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 32.16003442298571,
+        "median_max_miss_db": 31.74613639831543,
+        "p90_max_miss_db": 45.9794898223877,
+        "worst_max_miss_db": 69.32758972167969,
+        "correction_l2_mean": 0.2624871931459525,
+        "clipped_entry_rate_mean": 0.00869918699186992,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.1804576993982
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.043948521514732
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.0033333333333333335,
+            "mean_miss_db": 16.602817166741687
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 23.495742425918582
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.01,
+            "mean_miss_db": 10.17759603412946
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.99413603901863
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.013333333333333334,
+            "mean_miss_db": 9.780303266032536
+          }
+        },
+        "controller": "C1_local",
+        "r": 16,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.7510090413248514,
+        "anchor_dz_r2": 0.43598541984742734,
+        "pair_holdout_c_rmse": 0.47158679953284005,
+        "pair_val_c_rmse": 0.4703546603996686
+      },
+      "20": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 24.78402167805036,
+        "median_max_miss_db": 19.402462989091873,
+        "p90_max_miss_db": 36.62051777648926,
+        "worst_max_miss_db": 58.43566970825195,
+        "correction_l2_mean": 0.3065971711459317,
+        "clipped_entry_rate_mean": 0.01764227642276423,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 18.386114526987075
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 18.479726835538944
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.05333333333333334,
+            "mean_miss_db": 9.282089046176274
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.0033333333333333335,
+            "mean_miss_db": 10.847597386535007
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.12,
+            "mean_miss_db": 3.455596305370331
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 12.869118197361628
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.07333333333333333,
+            "mean_miss_db": 4.51047558517456
+          }
+        },
+        "controller": "C1_local",
+        "r": 20,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.6865323491585855,
+        "anchor_dz_r2": 0.5286733335580418,
+        "pair_holdout_c_rmse": 0.5660869297583265,
+        "pair_val_c_rmse": 0.5669616137064344
+      },
+      "24": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 21.990030983388422,
+        "median_max_miss_db": 19.018640369176865,
+        "p90_max_miss_db": 33.0524520111084,
+        "worst_max_miss_db": 48.61282989501953,
+        "correction_l2_mean": 0.30739808096909976,
+        "clipped_entry_rate_mean": 0.020162601626016262,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 18.230698268214862
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.780108336905638
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.05,
+            "mean_miss_db": 8.19176773015658
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.013333333333333334,
+            "mean_miss_db": 9.529071586513519
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.16666666666666666,
+            "mean_miss_db": 2.6546216833591463
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 7.402027307748795
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.1,
+            "mean_miss_db": 3.645503104607264
+          }
+        },
+        "controller": "C1_local",
+        "r": 24,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.6732535338411978,
+        "anchor_dz_r2": 0.5467296791696157,
+        "pair_holdout_c_rmse": 0.6390956635012138,
+        "pair_val_c_rmse": 0.6421037004817457
+      },
+      "32": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 21.96989759463469,
+        "median_max_miss_db": 18.99968495965004,
+        "p90_max_miss_db": 32.23891009521485,
+        "worst_max_miss_db": 54.154276580810546,
+        "correction_l2_mean": 0.30591104098941807,
+        "clipped_entry_rate_mean": 0.021219512195121953,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 18.172626229723296
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.725198423763118
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.05333333333333334,
+            "mean_miss_db": 8.204091569519044
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.0033333333333333335,
+            "mean_miss_db": 9.371171420113244
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.17,
+            "mean_miss_db": 2.8267960105737053
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.01,
+            "mean_miss_db": 7.381879307031632
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.11333333333333333,
+            "mean_miss_db": 3.428876494630178
+          }
+        },
+        "controller": "C1_local",
+        "r": 32,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.6716893139708568,
+        "anchor_dz_r2": 0.5488334654966395,
+        "pair_holdout_c_rmse": 0.7311080085954041,
+        "pair_val_c_rmse": 0.7371849155937394
+      },
+      "41": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 21.973041347233455,
+        "median_max_miss_db": 18.977680325508118,
+        "p90_max_miss_db": 32.879514739990235,
+        "worst_max_miss_db": 50.904982299804686,
+        "correction_l2_mean": 0.3061931154831713,
+        "clipped_entry_rate_mean": 0.021463414634146343,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 18.144622360269228
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.74229948947827
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.056666666666666664,
+            "mean_miss_db": 7.765207100343703
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 9.335019172223408
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.16333333333333333,
+            "mean_miss_db": 2.7403285632133487
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 7.461760239601135
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.09666666666666666,
+            "mean_miss_db": 3.5083353074232733
+          }
+        },
+        "controller": "C1_local",
+        "r": 41,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.6713266744441306,
+        "anchor_dz_r2": 0.549320496179065,
+        "pair_holdout_c_rmse": 0.7958630986707882,
+        "pair_val_c_rmse": 0.8042510027332626
+      }
+    },
+    "C2_local_response": {
+      "8": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 33.26455047978361,
+        "median_max_miss_db": 32.886039123535156,
+        "p90_max_miss_db": 47.585223648071306,
+        "worst_max_miss_db": 71.71018981933594,
+        "correction_l2_mean": 0.15049265881550292,
+        "clipped_entry_rate_mean": 0.008861788617886179,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.448718019127845
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.372551266252994
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 15.961054445505143
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 23.57919324239095
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 14.47763930161794
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 21.62559813896815
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 10.772387653779981
+          }
+        },
+        "controller": "C2_local_response",
+        "r": 8,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.8667350739576668,
+        "anchor_dz_r2": 0.24877031157039864,
+        "pair_holdout_c_rmse": 0.45645445839918974,
+        "pair_val_c_rmse": 0.4479405972497099
+      },
+      "12": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 32.33895210417111,
+        "median_max_miss_db": 32.38534996032715,
+        "p90_max_miss_db": 46.25444519042969,
+        "worst_max_miss_db": 70.87317657470703,
+        "correction_l2_mean": 0.214199595313586,
+        "clipped_entry_rate_mean": 0.007479674796747968,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.38732350115975
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.202278824498254
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 16.518356802654264
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 23.014876182079316
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 12.51569295891126
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 20.167945764859518
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 11.772861312818526
+          }
+        },
+        "controller": "C2_local_response",
+        "r": 12,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.8271088623726471,
+        "anchor_dz_r2": 0.3158909297835336,
+        "pair_holdout_c_rmse": 0.48308610031594745,
+        "pair_val_c_rmse": 0.47389445915483885
+      },
+      "16": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 32.06997950461706,
+        "median_max_miss_db": 31.964101181030273,
+        "p90_max_miss_db": 46.3426432800293,
+        "worst_max_miss_db": 69.06065826416015,
+        "correction_l2_mean": 0.2659656074894942,
+        "clipped_entry_rate_mean": 0.008699186991869919,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.177592871089775
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.046532888362805
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.0033333333333333335,
+            "mean_miss_db": 16.573103836075465
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 23.514315687020623
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.01,
+            "mean_miss_db": 10.022230544805526
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 18.02036098798116
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.016666666666666666,
+            "mean_miss_db": 9.780633937597274
+          }
+        },
+        "controller": "C2_local_response",
+        "r": 16,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.7478159649513585,
+        "anchor_dz_r2": 0.4407712825629758,
+        "pair_holdout_c_rmse": 0.505620701410968,
+        "pair_val_c_rmse": 0.4988516329977874
+      },
+      "20": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 23.54925641855399,
+        "median_max_miss_db": 19.30087637901306,
+        "p90_max_miss_db": 35.28206130981445,
+        "worst_max_miss_db": 53.24727127075195,
+        "correction_l2_mean": 0.3206679878584495,
+        "clipped_entry_rate_mean": 0.020894308943089433,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 18.209242382844288
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 18.39546781351169
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.05333333333333334,
+            "mean_miss_db": 7.888585752582548
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.0033333333333333335,
+            "mean_miss_db": 9.464827911154428
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.13,
+            "mean_miss_db": 3.1907670185565946
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 11.895175094604491
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.08666666666666667,
+            "mean_miss_db": 4.189266779915491
+          }
+        },
+        "controller": "C2_local_response",
+        "r": 20,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.6757691459752667,
+        "anchor_dz_r2": 0.5433360613471296,
+        "pair_holdout_c_rmse": 0.6054356289348028,
+        "pair_val_c_rmse": 0.6021545408783942
+      },
+      "24": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 21.05754154475927,
+        "median_max_miss_db": 18.867117702960968,
+        "p90_max_miss_db": 30.410703010559082,
+        "worst_max_miss_db": 52.44422409057617,
+        "correction_l2_mean": 0.32279479481415113,
+        "clipped_entry_rate_mean": 0.023739837398373983,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.95443326552709
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.58947200715542
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.06,
+            "mean_miss_db": 6.828941196727753
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.01,
+            "mean_miss_db": 7.940752934503554
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.19,
+            "mean_miss_db": 2.323542765061061
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 6.5063964275519055
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.12333333333333334,
+            "mean_miss_db": 3.306563580783208
+          }
+        },
+        "controller": "C2_local_response",
+        "r": 24,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.6606472618329446,
+        "anchor_dz_r2": 0.5635451954319359,
+        "pair_holdout_c_rmse": 0.6807326312378936,
+        "pair_val_c_rmse": 0.6801622188710909
+      },
+      "32": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 20.979286617640653,
+        "median_max_miss_db": 18.828727304935455,
+        "p90_max_miss_db": 30.29321231842042,
+        "worst_max_miss_db": 57.039122314453124,
+        "correction_l2_mean": 0.32082563389123675,
+        "clipped_entry_rate_mean": 0.024796747967479677,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.895476325054965
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.523527720868586
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.06333333333333334,
+            "mean_miss_db": 6.647251458787918
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.01,
+            "mean_miss_db": 7.4091827892144515
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.20666666666666667,
+            "mean_miss_db": 2.7021678647200265
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.013333333333333334,
+            "mean_miss_db": 6.6507642348607385
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.14,
+            "mean_miss_db": 3.0583618756453195
+          }
+        },
+        "controller": "C2_local_response",
+        "r": 32,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.6585738033292637,
+        "anchor_dz_r2": 0.566280545567736,
+        "pair_holdout_c_rmse": 0.7668102044919799,
+        "pair_val_c_rmse": 0.7731646762848441
+      },
+      "41": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 21.081506860617797,
+        "median_max_miss_db": 18.7998765707016,
+        "p90_max_miss_db": 31.898738357543944,
+        "worst_max_miss_db": 50.59317657470703,
+        "correction_l2_mean": 0.3206477889030894,
+        "clipped_entry_rate_mean": 0.026504065040650407,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.823514971733093
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.590315574109553
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.08,
+            "mean_miss_db": 6.231813335323333
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.013333333333333334,
+            "mean_miss_db": 7.574030640904108
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.21,
+            "mean_miss_db": 2.5136763842105867
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 6.746230771144231
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.13333333333333333,
+            "mean_miss_db": 3.2398145395914715
+          }
+        },
+        "controller": "C2_local_response",
+        "r": 41,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.657999599225568,
+        "anchor_dz_r2": 0.5670365274183008,
+        "pair_holdout_c_rmse": 0.8272626790595482,
+        "pair_val_c_rmse": 0.8381475383260191
+      }
+    },
+    "C3_mixed": {
+      "8": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 33.33020921769341,
+        "median_max_miss_db": 32.9692561340332,
+        "p90_max_miss_db": 47.50860202026368,
+        "worst_max_miss_db": 77.1061019897461,
+        "correction_l2_mean": 0.15362161041026462,
+        "clipped_entry_rate_mean": 0.008699186991869919,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.44930933713913
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.37126478781303
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 15.94596943974495
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 23.55757648865382
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 14.540958650509516
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 21.643196206092835
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 10.628298607063291
+          }
+        },
+        "controller": "C3_mixed",
+        "r": 8,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.8670895437122395,
+        "anchor_dz_r2": 0.24815572318370027,
+        "pair_holdout_c_rmse": 0.4082764532107058,
+        "pair_val_c_rmse": 0.4116705114871751
+      },
+      "12": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 32.38731114105781,
+        "median_max_miss_db": 32.38933349609375,
+        "p90_max_miss_db": 45.84822036743165,
+        "worst_max_miss_db": 78.42445373535156,
+        "correction_l2_mean": 0.2169663760326641,
+        "clipped_entry_rate_mean": 0.00804878048780488,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.387529019216696
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.21376014471054
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 16.470599345159528
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 22.96805409669876
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 12.471034949302672
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 20.26790171702703
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 11.713364529800414
+          }
+        },
+        "controller": "C3_mixed",
+        "r": 12,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.8272447268318469,
+        "anchor_dz_r2": 0.3156661619278107,
+        "pair_holdout_c_rmse": 0.43984501510877577,
+        "pair_val_c_rmse": 0.4421280928516353
+      },
+      "16": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 32.00636217178106,
+        "median_max_miss_db": 32.63533721923828,
+        "p90_max_miss_db": 46.15289108276368,
+        "worst_max_miss_db": 68.19449310302734,
+        "correction_l2_mean": 0.267407367063375,
+        "clipped_entry_rate_mean": 0.008699186991869919,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.167697693506877
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 19.059908378571272
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.0033333333333333335,
+            "mean_miss_db": 16.589229709800083
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 23.243644024133687
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.013333333333333334,
+            "mean_miss_db": 9.991527907212575
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 18.072074964443843
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.02,
+            "mean_miss_db": 9.823105817015964
+          }
+        },
+        "controller": "C3_mixed",
+        "r": 16,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.748001661677416,
+        "anchor_dz_r2": 0.4404935141269314,
+        "pair_holdout_c_rmse": 0.4647804990456243,
+        "pair_val_c_rmse": 0.4695293616265505
+      },
+      "20": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 23.402759986511867,
+        "median_max_miss_db": 19.274158716201782,
+        "p90_max_miss_db": 34.88153945922853,
+        "worst_max_miss_db": 52.039244384765624,
+        "correction_l2_mean": 0.3263336505907244,
+        "clipped_entry_rate_mean": 0.021788617886178863,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 18.15678501715263
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 18.389994233151278
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.06333333333333334,
+            "mean_miss_db": 7.693319861316682
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 9.106089895757037
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.12,
+            "mean_miss_db": 3.070442450284958
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 11.828376038074493
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.08333333333333333,
+            "mean_miss_db": 4.107612450520198
+          }
+        },
+        "controller": "C3_mixed",
+        "r": 20,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.6733119114283438,
+        "anchor_dz_r2": 0.5466510699279865,
+        "pair_holdout_c_rmse": 0.5653821394051523,
+        "pair_val_c_rmse": 0.5743919990195405
+      },
+      "24": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 20.8750541539073,
+        "median_max_miss_db": 18.83471006155014,
+        "p90_max_miss_db": 30.503210754394534,
+        "worst_max_miss_db": 52.44724914550781,
+        "correction_l2_mean": 0.32940776246431436,
+        "clipped_entry_rate_mean": 0.025772357723577236,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.8622973755002
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.543350110054018
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.06666666666666667,
+            "mean_miss_db": 6.573888275146484
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.01,
+            "mean_miss_db": 7.548515969403584
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.21,
+            "mean_miss_db": 2.23870044263204
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.01,
+            "mean_miss_db": 6.268680900335312
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.13333333333333333,
+            "mean_miss_db": 3.2384929786523187
+          }
+        },
+        "controller": "C3_mixed",
+        "r": 24,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.657057344820932,
+        "anchor_dz_r2": 0.5682756456161778,
+        "pair_holdout_c_rmse": 0.6431213002080954,
+        "pair_val_c_rmse": 0.6542645822388472
+      },
+      "32": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 20.46353187319835,
+        "median_max_miss_db": 18.728658318519592,
+        "p90_max_miss_db": 28.513578079223635,
+        "worst_max_miss_db": 56.86272308349609,
+        "correction_l2_mean": 0.3272757551592664,
+        "clipped_entry_rate_mean": 0.026747967479674794,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.784215546349685
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.484905039072036
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.08333333333333333,
+            "mean_miss_db": 5.947288303772607
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.013333333333333334,
+            "mean_miss_db": 6.833560291115442
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.22333333333333333,
+            "mean_miss_db": 2.53761238026619
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.01,
+            "mean_miss_db": 6.316319713592529
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.15333333333333332,
+            "mean_miss_db": 3.0373133309841154
+          }
+        },
+        "controller": "C3_mixed",
+        "r": 32,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.6548145522133789,
+        "anchor_dz_r2": 0.5712179022089077,
+        "pair_holdout_c_rmse": 0.7343889722539529,
+        "pair_val_c_rmse": 0.7520904254377669
+      },
+      "41": {
+        "num_states": 300,
+        "pass_count": 0,
+        "pass_rate": 0.0,
+        "mean_max_miss_db": 20.676114552569388,
+        "median_max_miss_db": 18.72594851255417,
+        "p90_max_miss_db": 30.65328450012209,
+        "worst_max_miss_db": 49.83227035522461,
+        "correction_l2_mean": 0.3267277956684308,
+        "clipped_entry_rate_mean": 0.028617886178861792,
+        "per_requirement": {
+          "passband_s11_1": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.68777760217587
+          },
+          "passband_s11_2": {
+            "pass_rate": 0.0,
+            "mean_miss_db": 17.56546985924244
+          },
+          "passband_s21_1": {
+            "pass_rate": 0.09,
+            "mean_miss_db": 5.747311250162125
+          },
+          "passband_s21_2": {
+            "pass_rate": 0.01,
+            "mean_miss_db": 7.035064542977014
+          },
+          "passband_s21_3": {
+            "pass_rate": 0.24,
+            "mean_miss_db": 2.395998063961665
+          },
+          "passband_s21_4": {
+            "pass_rate": 0.006666666666666667,
+            "mean_miss_db": 6.264179670015971
+          },
+          "passband_s21_5": {
+            "pass_rate": 0.12666666666666668,
+            "mean_miss_db": 3.2520045900821684
+          }
+        },
+        "controller": "C3_mixed",
+        "r": 41,
+        "K": 512,
+        "lambda": 0.01,
+        "anchor_dz_normalized_rmse": 0.6541545231825021,
+        "anchor_dz_r2": 0.5720818597991901,
+        "pair_holdout_c_rmse": 0.7999709393738704,
+        "pair_val_c_rmse": 0.8210111241139136
+      }
+    }
+  },
+  "baselines": {
+    "oracle_anchor_correction": {
+      "num_states": 300,
+      "pass_count": 300,
+      "pass_rate": 1.0,
+      "mean_max_miss_db": 0.0,
+      "median_max_miss_db": 0.0,
+      "p90_max_miss_db": 0.0,
+      "worst_max_miss_db": 0.0,
+      "correction_l2_mean": 0.3906489467745148,
+      "clipped_entry_rate_mean": 0.0,
+      "per_requirement": {
+        "passband_s11_1": {
+          "pass_rate": 1.0,
+          "mean_miss_db": 0.0
+        },
+        "passband_s11_2": {
+          "pass_rate": 1.0,
+          "mean_miss_db": 0.0
+        },
+        "passband_s21_1": {
+          "pass_rate": 1.0,
+          "mean_miss_db": 0.0
+        },
+        "passband_s21_2": {
+          "pass_rate": 1.0,
+          "mean_miss_db": 0.0
+        },
+        "passband_s21_3": {
+          "pass_rate": 1.0,
+          "mean_miss_db": 0.0
+        },
+        "passband_s21_4": {
+          "pass_rate": 1.0,
+          "mean_miss_db": 0.0
+        },
+        "passband_s21_5": {
+          "pass_rate": 1.0,
+          "mean_miss_db": 0.0
+        }
+      }
+    },
+    "zero_correction": {
+      "num_states": 300,
+      "pass_count": 0,
+      "pass_rate": 0.0,
+      "mean_max_miss_db": 36.02852188700239,
+      "median_max_miss_db": 35.65997001647949,
+      "p90_max_miss_db": 51.481660842895536,
+      "worst_max_miss_db": 75.72480010986328,
+      "correction_l2_mean": 0.0,
+      "clipped_entry_rate_mean": 0.012276422764227645,
+      "per_requirement": {
+        "passband_s11_1": {
+          "pass_rate": 0.0,
+          "mean_miss_db": 19.58657385930419
+        },
+        "passband_s11_2": {
+          "pass_rate": 0.0,
+          "mean_miss_db": 19.56593766686817
+        },
+        "passband_s21_1": {
+          "pass_rate": 0.006666666666666667,
+          "mean_miss_db": 16.9593646194458
+        },
+        "passband_s21_2": {
+          "pass_rate": 0.0,
+          "mean_miss_db": 25.45192033290863
+        },
+        "passband_s21_3": {
+          "pass_rate": 0.0,
+          "mean_miss_db": 14.648321620225907
+        },
+        "passband_s21_4": {
+          "pass_rate": 0.0,
+          "mean_miss_db": 25.524382670720417
+        },
+        "passband_s21_5": {
+          "pass_rate": 0.01,
+          "mean_miss_db": 16.24742980747223
+        }
+      }
+    }
+  },
+  "full_validation": {
+    "best": {
+      "num_states": 1000,
+      "pass_count": 0,
+      "pass_rate": 0.0,
+      "mean_max_miss_db": 20.59689007785201,
+      "median_max_miss_db": 18.69540160894394,
+      "p90_max_miss_db": 30.090987518310545,
+      "worst_max_miss_db": 71.74400970458984,
+      "correction_l2_mean": 0.32909569311893405,
+      "clipped_entry_rate_mean": 0.026414634146341463,
+      "per_requirement": {
+        "passband_s11_1": {
+          "pass_rate": 0.0,
+          "mean_miss_db": 17.747931517630814
+        },
+        "passband_s11_2": {
+          "pass_rate": 0.0,
+          "mean_miss_db": 17.452653689712285
+        },
+        "passband_s21_1": {
+          "pass_rate": 0.095,
+          "mean_miss_db": 6.332329284763334
+        },
+        "passband_s21_2": {
+          "pass_rate": 0.011,
+          "mean_miss_db": 6.959813672499655
+        },
+        "passband_s21_3": {
+          "pass_rate": 0.224,
+          "mean_miss_db": 2.308519879508019
+        },
+        "passband_s21_4": {
+          "pass_rate": 0.007,
+          "mean_miss_db": 5.816240121841431
+        },
+        "passband_s21_5": {
+          "pass_rate": 0.134,
+          "mean_miss_db": 2.9483944689226145
+        }
+      },
+      "controller": "C3_mixed",
+      "r": 32,
+      "K": 512
+    },
+    "C1_local": {
+      "num_states": 1000,
+      "pass_count": 0,
+      "pass_rate": 0.0,
+      "mean_max_miss_db": 22.043274191311596,
+      "median_max_miss_db": 18.99250304698944,
+      "p90_max_miss_db": 33.0839835357666,
+      "worst_max_miss_db": 76.62625885009766,
+      "correction_l2_mean": 0.3078249645184914,
+      "clipped_entry_rate_mean": 0.02002439024390244,
+      "per_requirement": {
+        "passband_s11_1": {
+          "pass_rate": 0.0,
+          "mean_miss_db": 18.146952528476714
+        },
+        "passband_s11_2": {
+          "pass_rate": 0.0,
+          "mean_miss_db": 17.708110965147615
+        },
+        "passband_s21_1": {
+          "pass_rate": 0.057,
+          "mean_miss_db": 8.41293892999649
+        },
+        "passband_s21_2": {
+          "pass_rate": 0.005,
+          "mean_miss_db": 9.328409289979932
+        },
+        "passband_s21_3": {
+          "pass_rate": 0.162,
+          "mean_miss_db": 2.7176760925292966
+        },
+        "passband_s21_4": {
+          "pass_rate": 0.006,
+          "mean_miss_db": 6.980864953756332
+        },
+        "passband_s21_5": {
+          "pass_rate": 0.096,
+          "mean_miss_db": 3.386111323242187
+        }
+      },
+      "controller": "C1_local",
+      "r": 32,
+      "K": 512
+    },
+    "C2_local_response": {
+      "num_states": 1000,
+      "pass_count": 0,
+      "pass_rate": 0.0,
+      "mean_max_miss_db": 20.976951960086822,
+      "median_max_miss_db": 18.78948611021042,
+      "p90_max_miss_db": 30.647564361572268,
+      "worst_max_miss_db": 69.45475646972656,
+      "correction_l2_mean": 0.32271779975013076,
+      "clipped_entry_rate_mean": 0.02426829268292683,
+      "per_requirement": {
+        "passband_s11_1": {
+          "pass_rate": 0.0,
+          "mean_miss_db": 17.854482485204937
+        },
+        "passband_s11_2": {
+          "pass_rate": 0.0,
+          "mean_miss_db": 17.498517053693533
+        },
+        "passband_s21_1": {
+          "pass_rate": 0.081,
+          "mean_miss_db": 6.847719760828017
+        },
+        "passband_s21_2": {
+          "pass_rate": 0.01,
+          "mean_miss_db": 7.558836661863325
+        },
+        "passband_s21_3": {
+          "pass_rate": 0.209,
+          "mean_miss_db": 2.4381619719743726
+        },
+        "passband_s21_4": {
+          "pass_rate": 0.007,
+          "mean_miss_db": 6.160192866921425
+        },
+        "passband_s21_5": {
+          "pass_rate": 0.125,
+          "mean_miss_db": 3.013477172613143
+        }
+      },
+      "controller": "C2_local_response",
+      "r": 32,
+      "K": 512
+    },
+    "C3_mixed": {
+      "num_states": 1000,
+      "pass_count": 0,
+      "pass_rate": 0.0,
+      "mean_max_miss_db": 20.59689007785201,
+      "median_max_miss_db": 18.69540160894394,
+      "p90_max_miss_db": 30.090987518310545,
+      "worst_max_miss_db": 71.74400970458984,
+      "correction_l2_mean": 0.32909569311893405,
+      "clipped_entry_rate_mean": 0.026414634146341463,
+      "per_requirement": {
+        "passband_s11_1": {
+          "pass_rate": 0.0,
+          "mean_miss_db": 17.747931517630814
+        },
+        "passband_s11_2": {
+          "pass_rate": 0.0,
+          "mean_miss_db": 17.452653689712285
+        },
+        "passband_s21_1": {
+          "pass_rate": 0.095,
+          "mean_miss_db": 6.332329284763334
+        },
+        "passband_s21_2": {
+          "pass_rate": 0.011,
+          "mean_miss_db": 6.959813672499655
+        },
+        "passband_s21_3": {
+          "pass_rate": 0.224,
+          "mean_miss_db": 2.308519879508019
+        },
+        "passband_s21_4": {
+          "pass_rate": 0.007,
+          "mean_miss_db": 5.816240121841431
+        },
+        "passband_s21_5": {
+          "pass_rate": 0.134,
+          "mean_miss_db": 2.9483944689226145
+        }
+      },
+      "controller": "C3_mixed",
+      "r": 32,
+      "K": 512
+    }
+  },
+  "internal_test": {
+    "num_states": 1000,
+    "pass_count": 0,
+    "pass_rate": 0.0,
+    "mean_max_miss_db": 20.263430409486297,
+    "median_max_miss_db": 18.72525918483734,
+    "p90_max_miss_db": 28.383415840148924,
+    "worst_max_miss_db": 51.22243377685547,
+    "correction_l2_mean": 0.32911289140638017,
+    "clipped_entry_rate_mean": 0.026634146341463417,
+    "per_requirement": {
+      "passband_s11_1": {
+        "pass_rate": 0.0,
+        "mean_miss_db": 17.765599161177875
+      },
+      "passband_s11_2": {
+        "pass_rate": 0.0,
+        "mean_miss_db": 17.487436182528736
+      },
+      "passband_s21_1": {
+        "pass_rate": 0.075,
+        "mean_miss_db": 5.98219015932083
+      },
+      "passband_s21_2": {
+        "pass_rate": 0.009,
+        "mean_miss_db": 6.647789171237944
+      },
+      "passband_s21_3": {
+        "pass_rate": 0.195,
+        "mean_miss_db": 2.3779030294418333
+      },
+      "passband_s21_4": {
+        "pass_rate": 0.009,
+        "mean_miss_db": 5.655214716911316
+      },
+      "passband_s21_5": {
+        "pass_rate": 0.118,
+        "mean_miss_db": 3.010218870916366
+      }
+    },
+    "controller": "C3_mixed",
+    "r": 32,
+    "K": 512
+  },
+  "selected": {
+    "controller": "C3_mixed",
+    "r": 32,
+    "K": 512,
+    "lambda": 0.01,
+    "pass_rate": 0.0,
+    "mean_max_miss_db": 20.46353187319835
+  }
+}

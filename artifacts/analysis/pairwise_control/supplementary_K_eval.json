@@ -1,0 +1,140 @@
+{
+  "128": {
+    "num_states": 300,
+    "pass_count": 0,
+    "pass_rate": 0.0,
+    "mean_max_miss_db": 20.487072035213313,
+    "median_max_miss_db": 18.768753170967102,
+    "p90_max_miss_db": 28.618931312561056,
+    "worst_max_miss_db": 69.12093994140625,
+    "correction_l2_mean": 0.3145156718843068,
+    "clipped_entry_rate_mean": 0.025365853658536587,
+    "per_requirement": {
+      "passband_s11_1": {
+        "pass_rate": 0.0,
+        "mean_miss_db": 17.759875220060348
+      },
+      "passband_s11_2": {
+        "pass_rate": 0.0,
+        "mean_miss_db": 17.3864998075366
+      },
+      "passband_s21_1": {
+        "pass_rate": 0.08,
+        "mean_miss_db": 6.136848289473852
+      },
+      "passband_s21_2": {
+        "pass_rate": 0.01,
+        "mean_miss_db": 7.133404674418767
+      },
+      "passband_s21_3": {
+        "pass_rate": 0.15333333333333332,
+        "mean_miss_db": 2.55293225312233
+      },
+      "passband_s21_4": {
+        "pass_rate": 0.013333333333333334,
+        "mean_miss_db": 5.6500466116269425
+      },
+      "passband_s21_5": {
+        "pass_rate": 0.12666666666666668,
+        "mean_miss_db": 3.128533177423477
+      }
+    },
+    "K": 128,
+    "r": 32,
+    "lambda": 0.01,
+    "pair_holdout_c_rmse": 0.7566969704726059,
+    "pair_dz_reconstruction_r2": 0.5275572707389794
+  },
+  "256": {
+    "num_states": 300,
+    "pass_count": 0,
+    "pass_rate": 0.0,
+    "mean_max_miss_db": 20.51942457427184,
+    "median_max_miss_db": 18.75587296485901,
+    "p90_max_miss_db": 29.173384780883815,
+    "worst_max_miss_db": 49.93810531616211,
+    "correction_l2_mean": 0.3211540401614274,
+    "clipped_entry_rate_mean": 0.024065040650406506,
+    "per_requirement": {
+      "passband_s11_1": {
+        "pass_rate": 0.0,
+        "mean_miss_db": 17.80157323886951
+      },
+      "passband_s11_2": {
+        "pass_rate": 0.0,
+        "mean_miss_db": 17.48533156633377
+      },
+      "passband_s21_1": {
+        "pass_rate": 0.07333333333333333,
+        "mean_miss_db": 6.172461219739914
+      },
+      "passband_s21_2": {
+        "pass_rate": 0.006666666666666667,
+        "mean_miss_db": 6.8452951921939835
+      },
+      "passband_s21_3": {
+        "pass_rate": 0.21333333333333335,
+        "mean_miss_db": 2.35944486951828
+      },
+      "passband_s21_4": {
+        "pass_rate": 0.006666666666666667,
+        "mean_miss_db": 5.92640260497729
+      },
+      "passband_s21_5": {
+        "pass_rate": 0.12,
+        "mean_miss_db": 3.061128746128082
+      }
+    },
+    "K": 256,
+    "r": 32,
+    "lambda": 0.01,
+    "pair_holdout_c_rmse": 0.7457261412881111,
+    "pair_dz_reconstruction_r2": 0.5177546051552546
+  },
+  "512": {
+    "num_states": 300,
+    "pass_count": 0,
+    "pass_rate": 0.0,
+    "mean_max_miss_db": 20.46353187319835,
+    "median_max_miss_db": 18.728658318519592,
+    "p90_max_miss_db": 28.513578079223635,
+    "worst_max_miss_db": 56.86272308349609,
+    "correction_l2_mean": 0.3272757551592664,
+    "clipped_entry_rate_mean": 0.026747967479674794,
+    "per_requirement": {
+      "passband_s11_1": {
+        "pass_rate": 0.0,
+        "mean_miss_db": 17.784215546349685
+      },
+      "passband_s11_2": {
+        "pass_rate": 0.0,
+        "mean_miss_db": 17.484905039072036
+      },
+      "passband_s21_1": {
+        "pass_rate": 0.08333333333333333,
+        "mean_miss_db": 5.947288303772607
+      },
+      "passband_s21_2": {
+        "pass_rate": 0.013333333333333334,
+        "mean_miss_db": 6.833560291115442
+      },
+      "passband_s21_3": {
+        "pass_rate": 0.22333333333333333,
+        "mean_miss_db": 2.53761238026619
+      },
+      "passband_s21_4": {
+        "pass_rate": 0.01,
+        "mean_miss_db": 6.316319713592529
+      },
+      "passband_s21_5": {
+        "pass_rate": 0.15333333333333332,
+        "mean_miss_db": 3.0373133309841154
+      }
+    },
+    "K": 512,
+    "r": 32,
+    "lambda": 0.01,
+    "pair_holdout_c_rmse": 0.7343889722539529,
+    "pair_dz_reconstruction_r2": 0.5126734988145263
+  }
+}

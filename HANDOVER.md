@@ -12,7 +12,7 @@
 |---|---|---|
 | Stage 1 | 工程准备：环境、数据缓存、anchor、DSP、FNO/ResNet/Pooling/Head、四条路线、export、smoke test | ✅ 完成 |
 | Stage 2 | Route 3 正式研究：representation R1/R2/R3、FNO modes 32/64/96/128、state/one-shot/residual 分析 | ✅ 完成 |
-| Stage 3 | 未开始（按指示停在 Stage 2） | ⏸ 未开始 |
+| Stage 3 | Pairwise / observable-subspace control 研究：response PCA、local Jacobian、可观测子空间、线性差分 controller | ✅ 完成（线性无信号，按规则停止） |
 
 **最终参考模型**：Route 3（Delay-FNO）+ **R3 raw+Tukey(α=0.25) + 32 modes**  
 - 3,275,325 参数；
@@ -469,4 +469,143 @@ runs/route3_diag/                                 agg64 + seed2027 runs
 | smoke | `.venv/bin/python scripts/smoke_test.py --tiny-steps 30` |
 
 > 多进程 / simulator 密集命令前加：`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1`
+
+
+---
+
+## 12. Stage 3 — Pairwise / observable-subspace control
+
+### 12.1 动机与设计
+
+Stage 2 表明 full 41-D state identification 的误差（MAE 0.032）远大于 one-shot 容差。Stage 3 检验另一种分解：
+
+```text
+(S_source, S_target) -> delta_m
+Delta z = V_K^T (S_j - S_i)      (response PCA latent difference)
+Delta u = u_j - u_i              (bounds-normalized parameter difference)
+Delta z ~= A Delta u             (local Jacobian)
+A = U S V^T                      (observable parameter subspace V_r)
+c = V_r^T Delta u ~= W Delta z   (linear differential controller)
+Delta m = half_range * V_r c
+```
+
+- 不生成新 state；只用缓存 train/validation/internal + 现有 anchor 的 response。
+- PCA、A、SVD、V_r、W、ridge λ 只用 train split 拟合；λ 用 train 内部 holdout（states 7000–7999）选择。
+- validation 只用于选择 r、controller 与 one-shot 评估；internal test 只在配置冻结后评估一次。
+- anchor 未重新优化；public seeds 未使用。
+
+### 12.2 实现与产物
+
+```text
+solution/pairwise.py          PCA / pair sampler / ridge A / ridge controller /
+                              correction evaluation
+scripts/pairwise_study.py     stages: pca | pairs | jacobian | residual | controllers | all
+
+artifacts/analysis/pairwise_control/
+  pca_spectrum.json                 explained / cumulative variance
+  pair_indices.npz                  (i, j, type) for train/val (git-ignored)
+  pair_distance_analysis.json       u-distance vs z-distance by pair type
+  local_control_map_A.npz           A_K, U_K, S_K, Vh_K, lambda (git-ignored)
+  singular_spectrum.json            spectrum / cumulative energy / condition
+  observable_bases_r*.npz           V_r (git-ignored)
+  residual_subspace_analysis.json   Stage-2 residual -> observable/weak
+  linear_controller_results.json    pair-level metrics for C1/C2/C3 x K x r x λ
+  validation_results.json           anchor one-shot grid + full validation + internal
+  pairwise_summary.json             汇总
+  ambiguity_direction_analysis.json response-similar / parameter-far directions
+  supplementary_K_eval.json         K=128/256/512 anchor correction check
+  anchor_pair_linear.json           直接 train->anchor 线性 controller 对照
+  plots/                            singular spectrum / miss-vs-r / pass-vs-r
+```
+
+复现：
+
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+.venv/bin/python scripts/pairwise_study.py --stage all --rebuild
+```
+
+### 12.3 结果
+
+**Q1 — response PCA / observable spectrum**
+
+```text
+PCA cumulative explained: K=64 95.65%, 128 99.17%, 256 99.91%, 512 99.995%
+A singular values (K=512): 21.22, 16.30, 13.38, 11.90, 10.06, ..., 0.20
+condition number: 105.6 (K=512), 111.0 (K=128)
+cumulative squared energy at r: 1 0.25, 3 0.50, 9 0.80, 13 0.91,
+                                16 0.95, 22 0.99, 24 0.995, 30 0.999
+holdout Delta-z normalized RMSE (local A): 0.785 (R^2 ~= 0.38)
+```
+
+**无sharp elbow**；按能量可用 r≈16（95%）或 r≈24（99.5%），但弱方向并非严格 null（σ_min/σ_max≈0.01），条件数约 106。
+
+**Q2 — response 相近但参数差异大**
+
+```text
+train pairs: 351,988（local 128k, response-local 128k, medium 32k, random 64k）
+u-distance mean: local 2.46, response-local 3.13, medium 3.82, random 3.61
+corr(u-distance, z-distance): response-local 0.13, local 0.23, random 0.37
+```
+
+response 最近的 10% pair，其 parameter distance 仍有 3.11（random 3.59）：response 相似只带来约 13% 的参数距离缩减。歧义 pair 的 Δu 主要参数（mean |Δu| 排序）：`1, 34, 37, 28, 35, 27, 25, 30, 24, 32, 18, 20`；与前阶段弱可辨识集合部分重合。
+
+**Q3 — 旧 Route-3 residual 在 observable/weak 子空间中的能量**
+
+| r | observable fraction | weak fraction | corr(miss, obs norm) | corr(miss, weak norm) |
+|---:|---:|---:|---:|---:|
+| 8 | 0.097 | 0.903 | 0.129 | 0.224 |
+| 12 | 0.162 | 0.838 | 0.147 | 0.216 |
+| 16 | 0.242 | 0.758 | 0.160 | 0.204 |
+| 20 | 0.334 | 0.666 | 0.186 | 0.188 |
+| 24 | 0.437 | 0.563 | 0.209 | 0.162 |
+| 32 | 0.688 | 0.312 | 0.228 | 0.116 |
+
+在 r=8/16 时大部分 old error 位于“weak”子空间，但 weak 误差仍与 miss 相关（top-quartile weak 23.1–23.3 dB vs obs 21.9–22.2 dB）。说明弱方向在 0.03 误差尺度上并非真的无关（局部线性化失效）。
+
+**Q4 — linear pairwise controller（K=512，300 validation states）**
+
+| r | C1 local | C2 local+resp | C3 mixed |
+|---:|---:|---:|---:|
+| 8 | 33.15 | 33.27 | 33.33 |
+| 12 | 32.41 | 32.34 | 32.39 |
+| 16 | 32.16 | 32.07 | 32.01 |
+| 20 | 24.78 | 23.55 | 23.40 |
+| 24 | 21.99 | 21.06 | 20.88 |
+| 32 | 21.97 | 20.98 | **20.46** |
+| 41 | 21.97 | 21.08 | 20.68 |
+
+（数值 = mean max specification miss，dB；所有配置 pass rate = 0）
+
+- 最佳：**C3 mixed, r=32, K=512, λ=0.01**。
+- Full validation 1000：pass **0/1000**，mean **20.60 dB**，median 18.70，P90 30.09，worst 71.74。
+- Internal test 1000：pass **0/1000**，mean **20.26 dB**，median 18.73，P90 28.38，worst 51.22。
+- 对照：旧 Route-3 state model（full validation）mean 20.95，median 18.94，P90 29.62，worst 54.31，pass 0。
+- 官方 sanity：oracle anchor correction 300/300 pass（mean 0）；zero correction 0/300，mean 36.03。
+- K 影响（C3 r=32，300 states）：K=128 20.49，K=256 20.52，K=512 20.46 → 几乎无影响。
+- pair 级指标（C3 K=512）：r=32 的 val observable-coordinate normalized RMSE 0.752，Δz 重建 R² 0.513；r=41 为 0.821 / 0.513。
+- 直接 train→anchor 线性对照（anchor_pair_linear）：最佳 r=41，300-state mean 21.89，full validation 22.09，internal 21.70，pass 0。
+
+**Q5 — 是否出现非零 pass rate**
+
+没有。所有 r、C1/C2/C3、K=128/256/512、以及 train→anchor 直接线性拟合，pass rate 均为 **0%**。
+
+**Q6 — 是否值得训练 neural pairwise controller**
+
+**No。** 按预设停止条件：
+
+- mean miss 最好 20.46/20.60 dB，相对旧 20.95 dB 仅改善约 0.35–0.5 dB（且 P90/worst 变差）；
+- 非零 pass rate 未出现；
+- Δz 重建 R²≈0.51，不属于“很好”；
+- 直接 anchor-pair 线性拟合更差（21.9–22.1 dB）。
+
+因此不训练 neural controller，Stage 3 到此停止。
+
+### 12.4 结论
+
+1. **response latent 的有效维度**：无 sharp elbow；按能量 r≈16–24，但弱方向仍非零（条件数 ~106），不存在干净的低维可观测子空间。
+2. **response 相似 ≠ 参数相似**：最近 response 的 pair 参数距离仍接近随机，说明 full-state inversion 的 weak-observability/null-space 问题真实存在。
+3. **线性差分控制不成立**：从 Δz 线性预测 Δu/observable coordinates，在 anchor 大跨度 correction 上没有产生可用信号；mean miss 与旧 state-identification 基本相同，pass 0。
+4. 原因判断：anchor 步长较大、局部线性 A 只解释 ~38% 的 Δz 方差、参数-响应映射强非线性且病态；线性化不足以支撑 0.001–0.002 的 correction 精度。
+5. 这并不否定“直接预测 correction”的方向，但说明**在当前 anchor、PCA latent、线性控制器与 8k 数据下**不可行。
 

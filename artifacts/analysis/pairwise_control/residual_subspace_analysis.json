@@ -1,0 +1,78 @@
+{
+  "source_residual": "/home/qian/DL_assignment_2026/artifacts/analysis/final_m32/validation/residuals.npz",
+  "best_K": 128,
+  "num_states": 1000,
+  "pass_rate": 0.0,
+  "by_r": {
+    "8": {
+      "observable_energy": 0.4296662967575354,
+      "weak_energy": 4.018984185067893,
+      "observable_fraction": 0.09658351414949304,
+      "weak_fraction": 0.9034164858505066,
+      "corr_miss_vs_observable_norm": 0.1288265920013283,
+      "corr_miss_vs_weak_norm": 0.2239531993328931,
+      "mean_miss_top_quartile_observable": 22.182553532738687,
+      "mean_miss_top_quartile_weak": 23.263256050798894
+    },
+    "12": {
+      "observable_energy": 0.7186542589976694,
+      "weak_energy": 3.7299962228277592,
+      "observable_fraction": 0.16154432943960606,
+      "weak_fraction": 0.8384556705603936,
+      "corr_miss_vs_observable_norm": 0.14732167740410676,
+      "corr_miss_vs_weak_norm": 0.21566228752030162,
+      "mean_miss_top_quartile_observable": 21.859653918411734,
+      "mean_miss_top_quartile_weak": 23.19628668435812
+    },
+    "16": {
+      "observable_energy": 1.0742124516342064,
+      "weak_energy": 3.3744380301912225,
+      "observable_fraction": 0.24146928512878385,
+      "weak_fraction": 0.7585307148712159,
+      "corr_miss_vs_observable_norm": 0.15982817070617558,
+      "corr_miss_vs_weak_norm": 0.204371822790021,
+      "mean_miss_top_quartile_observable": 22.237702404820922,
+      "mean_miss_top_quartile_weak": 23.052534916412828
+    },
+    "20": {
+      "observable_energy": 1.4868689209198505,
+      "weak_energy": 2.961781560905577,
+      "observable_fraction": 0.33422920658620464,
+      "weak_fraction": 0.6657707934137947,
+      "corr_miss_vs_observable_norm": 0.1855329484660419,
+      "corr_miss_vs_weak_norm": 0.18784404823631748,
+      "mean_miss_top_quartile_observable": 22.52956723785162,
+      "mean_miss_top_quartile_weak": 22.735736669609548
+    },
+    "24": {
+      "observable_energy": 1.9443196106936689,
+      "weak_energy": 2.5043308711317587,
+      "observable_fraction": 0.4370582986092109,
+      "weak_fraction": 0.5629417013907885,
+      "corr_miss_vs_observable_norm": 0.20909292214066877,
+      "corr_miss_vs_weak_norm": 0.16216841715231836,
+      "mean_miss_top_quartile_observable": 22.779615462203022,
+      "mean_miss_top_quartile_weak": 22.474951251466276
+    },
+    "32": {
+      "observable_energy": 3.0623531953647496,
+      "weak_energy": 1.3862972864606766,
+      "observable_fraction": 0.6883780166312737,
+      "weak_fraction": 0.31162198336872543,
+      "corr_miss_vs_observable_norm": 0.2280617803205951,
+      "corr_miss_vs_weak_norm": 0.11582843144002326,
+      "mean_miss_top_quartile_observable": 23.086313664152623,
+      "mean_miss_top_quartile_weak": 21.945125582749842
+    },
+    "41": {
+      "observable_energy": 4.448650481825427,
+      "weak_energy": 9.262759963034909e-30,
+      "observable_fraction": 0.9999999999999994,
+      "weak_fraction": 2.0821505310154394e-30,
+      "corr_miss_vs_observable_norm": 0.23635760119128843,
+      "corr_miss_vs_weak_norm": 0.19454466775089985,
+      "mean_miss_top_quartile_observable": 23.255910135242935,
+      "mean_miss_top_quartile_weak": 22.802500736660956
+    }
+  }
+}
