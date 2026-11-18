@@ -1,0 +1,19 @@
+{
+  "seed": 2026,
+  "population": 256,
+  "elite_frac": 0.08,
+  "init_std": 0.35,
+  "min_std": 0.01,
+  "extra_std": 0.0,
+  "smoothing": 0.7,
+  "iterations": 150,
+  "workers": 12,
+  "objective": "softmin",
+  "softmin_tau": 0.5,
+  "early_stop_margin": 2.0,
+  "local_refine_steps": 60,
+  "local_refine_sigma": 0.02,
+  "global_seed_pool": 0,
+  "output": "artifacts/common/anchor.npz",
+  "log_every": 5
+}

@@ -1,0 +1,43 @@
+{
+  "min_margin_driver_distribution": {
+    "passband_s11_1": 0.48,
+    "passband_s11_2": 0.358,
+    "passband_s21_1": 0.047,
+    "passband_s21_2": 0.075,
+    "passband_s21_3": 0.02,
+    "passband_s21_4": 0.011,
+    "passband_s21_5": 0.009
+  },
+  "weighted_danger_error_vs_miss_corr": 0.21081900141790405,
+  "linf_vs_miss_corr": 0.07950159072484404,
+  "mean_miss_by_driver": {
+    "passband_s11_1": {
+      "count": 480,
+      "mean_miss": 18.73019724395126
+    },
+    "passband_s11_2": {
+      "count": 358,
+      "mean_miss": 18.653571825994792
+    },
+    "passband_s21_1": {
+      "count": 47,
+      "mean_miss": 29.603419970248613
+    },
+    "passband_s21_2": {
+      "count": 75,
+      "mean_miss": 35.49384119669596
+    },
+    "passband_s21_3": {
+      "count": 20,
+      "mean_miss": 32.030469131469715
+    },
+    "passband_s21_4": {
+      "count": 11,
+      "mean_miss": 33.530557285655625
+    },
+    "passband_s21_5": {
+      "count": 9,
+      "mean_miss": 24.74788225809733
+    }
+  }
+}

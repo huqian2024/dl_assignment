@@ -1,0 +1,23 @@
+# Python / venv
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Caches and run outputs (large, reproducible from scripts)
+cache/
+runs/
+submission_artifacts/
+assignments/submission_artifacts/
+
+# Generated binaries / weights / datasets
+*.pt
+*.pth
+*.ckpt
+*.npz
+*.bundle
+
+# OS / editor
+.DS_Store
+*.swp

@@ -1,0 +1,472 @@
+# CM19 One-Shot S→ΔM — 工程交接文档
+
+> 最后更新：2026-11-17  
+> 项目根目录：`/home/qian/DL_assignment_2026`  
+> 上游仓库：<https://github.com/huqian2024/dl_assignment.git>
+
+---
+
+## 0. 当前状态
+
+| 阶段 | 内容 | 状态 |
+|---|---|---|
+| Stage 1 | 工程准备：环境、数据缓存、anchor、DSP、FNO/ResNet/Pooling/Head、四条路线、export、smoke test | ✅ 完成 |
+| Stage 2 | Route 3 正式研究：representation R1/R2/R3、FNO modes 32/64/96/128、state/one-shot/residual 分析 | ✅ 完成 |
+| Stage 3 | 未开始（按指示停在 Stage 2） | ⏸ 未开始 |
+
+**最终参考模型**：Route 3（Delay-FNO）+ **R3 raw+Tukey(α=0.25) + 32 modes**  
+- 3,275,325 参数；
+- validation MAE **0.03222**，P95 **0.08328**；
+- one-shot pass rate **0/1000**（validation 与 internal test 均为 0）；
+- 结论：state 估计精度比 one-shot 所需精度（单参数约 0.001–0.002）差约 20–30 倍，主要限制是数据规模/泛化与 41 维逆问题病态性，而不是网络容量。
+
+---
+
+## 1. 环境
+
+```text
+OS              Linux
+Python          3.10.12（/.venv，使用 /usr/bin/python3.10 创建）
+numpy           1.24.4
+torch           2.4.1+cu121
+matplotlib      3.7.5
+GPU             NVIDIA GeForce RTX 4060 Laptop GPU (8 GB, sm_89)
+CUDA            torch CUDA runtime 12.1；torch.cuda.is_available() == True
+```
+
+安装（在新机器上）：
+
+```bash
+cd /home/qian/DL_assignment_2026
+/usr/bin/python3.10 -m venv .venv
+.venv/bin/pip install numpy==1.24.4 torch==2.4.1 matplotlib==3.7.5
+```
+
+说明：
+
+- 训练默认 **bf16 AMP**。fp16 在奇数长度 cuFFT（2001/2129）上不受支持，且部分路线会溢出；FFT 已在模型内部强制 float32 并局部关闭 autocast。
+- 使用多进程跑 simulator（数据生成、anchor 搜索）时，必须设置单线程 BLAS，否则会线程超订、几乎停滞：
+
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 <command>
+```
+
+- 本机访问 GitHub 需要代理 `http://127.0.0.1:7890`（`https_proxy`/`http_proxy`）。
+
+---
+
+## 2. 目录结构
+
+```text
+assignments/                 作业原始材料（simulator、notebook、designs；不要修改）
+solution/                    核心库（可复用、模块化）
+  config.py                  JSON 配置加载 + 默认值
+  utils.py                   路径/种子/JSON/计时/参数统计
+  simulator.py               公开 simulator 封装、signed margins
+  data.py                    数据缓存、manifest、完整性校验、norm stats
+  normalization.py           通道/位置归一化、state 归一化、统计持久化
+  dsp.py                     可微 complex FFT/IFFT、Tukey/Hann、padding/crop
+  blocks.py                  ResBlock1D、ResFCBlock、norm 工厂
+  pooling.py                 InformationPreservingPool1D、multiscale aggregator
+  encoders.py                ResNetEncoder、SpectralConv1D、FNOConvResidualBlock、FNOEncoder
+  heads.py                   ResMLPHead
+  models.py                  组合式 OneShotStateModel（representation×encoder×pooling×head）
+  anchor_search.py           CEM + local refinement，输出 compliant anchor
+  losses.py                  Huber/MSE/L1 + 完整 physical error metrics
+  trainer.py                 AdamW/AMP/cosine/early stopping/多准则 checkpoint/周期 one-shot 评估
+  evaluator.py               官方 one-shot 评估、identification 评估、画图
+  export.py                  TorchScript trace/save/load/一致性验证
+  analysis.py                residual 数据集、失败分析、诊断图
+configs/                     路线与实验配置（JSON）
+scripts/                     数据/ anchor / 训练 / 评估 / 导出 / smoke / 分析 CLI
+tests/                       unittest（DSP、pooling、models、export、seed guard）
+HANDOVER.md                  本文件
+```
+
+**不在 git 中**（见 `.gitignore`）：`.venv/`、`cache/`、`runs/`、`*.npz`、`*.pt`、`submission_artifacts/`。  
+其中 `artifacts/analysis/**/*.json` 与 `*.png` 会提交，用于保留实验结果摘要；残差 `.npz`、anchor 向量、norm stats、模型权重不提交（涉及作业学术诚信，见 §9）。
+
+---
+
+## 3. 作业 contract（必须遵守）
+
+```text
+输入       raw response, shape (B, 4, 2001)
+通道顺序   [Re S11, Im S11, Re S21, Im S21]
+输出       delta_m, shape (B, 41)，原始 matrix-parameter scale
+forward    禁止调用 simulator；禁止以 seed / m_current 作为输入
+归一化     所有统计、window、anchor 必须存为 register_buffer（导出后无需外部文件）
+参数量     < 20,000,000（本项目目标 ≤ 10M）
+导出       standalone TorchScript，CPU 可加载
+public seeds 10000–10049 严禁用于训练/target/归一化/选模/调参
+```
+
+公开 API（`assignments/cm19_simulator.py`）：
+
+```text
+sample_state(seed) -> (m_current, response)
+simulate(m_vector) -> response
+check_response(response) -> dict
+apply_correction(current_vector, delta_m) -> CorrectionResult
+lower_bounds / upper_bounds
+```
+
+---
+
+## 4. 数据与关键产物
+
+### 4.1 数据 split（已固定）
+
+```text
+train          0 .. 7999       8000 states
+validation     20000 .. 20999  1000 states
+internal-test  30000 .. 30999  1000 states
+public eval    10000 .. 10049  从未使用
+```
+
+缓存（本地，不提交）：
+
+```text
+cache/dataset/manifest.json
+cache/dataset/{split}_responses.npy   float32 (N,4,2001)
+cache/dataset/{split}_m_current.npy   float32 (N,41)
+cache/dataset/{split}_seeds.npy       int64
+```
+
+生成结果：10,000 simulator calls，约 52.7 s（12 workers，~190 states/s），缓存 306.97 MB；manifest 记录 sha256、split 范围、calls、wall time。
+
+### 4.2 Anchor（本地，不提交）
+
+```text
+artifacts/common/anchor.npz
+artifacts/common/anchor.json
+artifacts/common/anchor.search_config.json
+```
+
+```text
+compliant              yes（公共 API 独立复核 7/7 通过）
+min signed margin      +0.638683 dB
+margins                s11_1 +1.0402, s11_2 +0.9593, s21_1 +0.8181,
+                       s21_2 +0.6390, s21_3 +0.6387, s21_4 +0.6602, s21_5 +0.6471
+search                 CEM (pop 256 × 150 iters) + local refine (60 steps)
+simulator calls        40,322（含最终验证）
+wall time              227.1 s
+```
+
+### 4.3 Normalization stats（本地，不提交）
+
+`artifacts/common/norm_stats.npz`，只由 **train split** 估计，包含 4 个 key：
+
+```text
+freq                  raw S，4 通道
+delay_none            raw delay，4 通道
+delay_tukey           Tukey delay only，4 通道
+delay_tukey_concat    raw + Tukey delay，8 通道（R3 使用）
+```
+
+每个 key 同时保存 `per_channel_*` 与 `position_*` 两套 mean/std。
+
+### 4.4 最终模型的 residual 数据集（本地，不提交）
+
+```text
+artifacts/analysis/final_m32/validation/residuals.npz
+artifacts/analysis/final_m32/validation/summary.json
+artifacts/analysis/final_m32/validation/{per_parameter_error,error_vs_miss,max_miss_histogram}.png
+artifacts/analysis/final_m32/validation/identifiability.json
+artifacts/analysis/final_m32/validation/failure_drivers.json
+
+artifacts/analysis/final_m32/internal_test/...（同上）
+```
+
+`residuals.npz` 字段：
+
+```text
+seeds, m_true, m_pred, error=m_pred-m_true, delta, corrected,
+margins (N,7), requirement_names, passed, max_miss_db, clipped_entry_rate
+```
+
+可直接用于 parameter sensitivity、weighted loss、robust anchor、failure clustering、Dual-domain 设计。
+
+### 4.5 重新生成命令
+
+```bash
+# 1) 数据 + norm stats（已存在时会跳过数据生成）
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+.venv/bin/python scripts/build_dataset.py --workers 12 \
+  --norm-configs configs/route_delay_fno_r1_raw.json \
+                 configs/route_delay_fno_r2_tukey.json \
+                 configs/route_delay_fno_r3_raw_tukey.json
+
+# 2) anchor（约 4 分钟）
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+.venv/bin/python scripts/find_anchor.py --workers 12 \
+  --population 256 --iterations 150 --local-refine-steps 60 --early-stop-margin 2.0
+
+# 3) 单测 / smoke
+.venv/bin/python -m unittest discover -s tests -v
+.venv/bin/python scripts/smoke_test.py --tiny-steps 30
+```
+
+---
+
+## 5. 训练 / 评估 / 导出 / 分析
+
+### 5.1 正式训练（Stage 2 实际使用）
+
+```bash
+# Representation study（R1 / R2 / R3），单卡顺序执行
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 bash -c '
+for name in r1_raw r2_tukey r3_raw_tukey; do
+  .venv/bin/python scripts/train.py \
+    --config configs/route_delay_fno_${name}.json \
+    --run-name ${name}_s2026 --output-dir runs/route3_repr --epochs 120
+done'
+
+# FNO mode study（32 / 96 / 128；64 复用 R3 的 run）
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 bash -c '
+for m in 32 96 128; do
+  .venv/bin/python scripts/train.py \
+    --config configs/route_delay_fno_r3_m${m}.json \
+    --run-name r3_m${m}_s2026 --output-dir runs/route3_modes --epochs 120
+done'
+
+# 诊断：aggregation length 64 / m32 第二 seed
+.venv/bin/python scripts/train.py --config configs/route_delay_fno_r3_agg64.json \
+  --run-name r3_agg64_s2026 --output-dir runs/route3_diag --epochs 120
+.venv/bin/python scripts/train.py --config configs/route_delay_fno_r3_m32_s2027.json \
+  --run-name r3_m32_s2027 --output-dir runs/route3_diag --epochs 120
+```
+
+训练默认：AdamW lr 3e-4 / wd 1e-4、cosine + 250 warmup steps、batch 64、grad clip 1.0、bf16、early stopping patience 20（val MAE）、max 120 epochs；每 5 epoch 在固定 200 个 validation states 上做官方 one-shot 评估（epoch 10 起）。
+
+### 5.2 评估
+
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+.venv/bin/python scripts/evaluate.py \
+  --config configs/route_delay_fno_r3_m32.json \
+  --checkpoint runs/route3_modes/r3_m32_s2026/best_mae.pt \
+  --split validation --limit 1000 --identification-limit 1000 \
+  --batch-size 16 --output artifacts/analysis/oneshot_val_m32.json
+```
+
+### 5.3 导出（TorchScript）
+
+```bash
+.venv/bin/python scripts/export_model.py \
+  --config configs/route_delay_fno_r3_m32.json \
+  --checkpoint runs/route3_modes/r3_m32_s2026/best_mae.pt \
+  --output-dir runs/route3_export --check-seed 777777
+```
+
+输出：`s_to_delta_m.pt` + `metadata.json`；CPU 加载，B=1/B=4 与 eager 数值一致（diff = 0.0）。
+
+### 5.4 残差与失败分析
+
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+.venv/bin/python scripts/analyze_model.py \
+  --config configs/route_delay_fno_r3_m32.json \
+  --checkpoint runs/route3_modes/r3_m32_s2026/best_mae.pt \
+  --split validation --limit 1000 --identification-limit 1000 \
+  --output-root artifacts/analysis/final_m32 --tag validation
+```
+
+`analyze_model.py` 保存 residual npz、per-param MAE/P95、最难参数、失败 enrichment、worst states 与三张诊断图。
+
+
+---
+
+## 6. 实验结果
+
+### 6.1 Stage 1 工程准备（摘要）
+
+- 环境：Python 3.10.12 / torch 2.4.1+cu121 / RTX 4060 8 GB。
+- 数据：8000 / 1000 / 1000，308 MB，sha256 校验通过，split 无重叠，public seed 零重叠。
+- anchor：合规，min margin +0.6387 dB，40,322 calls / 227.1 s。
+- 四条路线均可 forward/backward、TorchScript 导出；参数 2.31M–5.63M；tiny-overfit loss 降至初值 21%–32%。
+- 22 个单元测试通过。
+
+### 6.2 Representation study（R1/R2/R3，m64，同一 schedule）
+
+| Representation | MAE | P95 | P99 | mean miss | median | P90 | worst | pass |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| R1 raw only | 0.03297 | 0.08454 | 0.11225 | 21.80 dB | 19.15 | 33.21 | 65.57 | 0 |
+| R2 Tukey only | 0.03311 | 0.08464 | 0.11387 | 21.91 dB | 19.14 | 34.29 | 59.79 | 0 |
+| **R3 raw + Tukey** | **0.03249** | **0.08421** | **0.11218** | 22.06 dB | 19.13 | 33.90 | **48.91** | 0 |
+
+三条路线差异 ~1.5%，在 seed 噪声内；R3 略优且信息最完整，选 R3。Tukey α = 0.25。
+
+### 6.3 FNO mode study（R3，其余完全一致）
+
+| modes | params | val MAE | P95 | mean miss | worst | epochs | train |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| **32** | **3.28M** | **0.03222** | **0.08330** | **21.05 dB** | **45.86** | 41 | 718 s |
+| 64 | 5.63M | 0.03249 | 0.08421 | 21.45 | 47.31 | 33 | 588 s |
+| 96 | 7.99M | 0.03275 | 0.08468 | 21.17 | 52.33 | 33 | 601 s |
+| 128 | 10.35M | 0.03273 | 0.08428 | 21.30 | 46.03 | 31 | 581 s |
+
+**结论：32 modes 足够且最优；64 不必作为起点，96/128 更大但更差。**
+
+### 6.4 最终 m32 模型（validation 1000 / internal-test 1000）
+
+| Metric | Train | Validation | Internal test |
+|---|---:|---:|---:|
+| MAE | 0.02739 | 0.03222 | 0.03247 |
+| RMSE | 0.03567 | 0.04153 | 0.04185 |
+| Median abs | — | 0.02607 | 0.02608 |
+| P90 | — | 0.06923 | 0.06960 |
+| P95 | 0.07243 | 0.08328 | 0.08403 |
+| P99 | 0.09973 | 0.11155 | 0.11282 |
+| Max | 0.19271 | 0.20005 | 0.22837 |
+| ‖e‖₂ mean | 0.2262 | 0.2634 | 0.2655 |
+| ‖e‖∞ mean | 0.0936 | 0.1056 | 0.1063 |
+
+One-shot：
+
+```text
+validation   1000 states, pass 0, rate 0.000
+             mean 20.95 dB, median 18.94, P90 29.62, worst 54.31
+internal     1000 states, pass 0, rate 0.000
+             mean 21.16 dB, median 18.97, P90 31.98, worst 59.93
+```
+
+- correction L2 mean 0.313，max 0.403；clipping 2.18%。
+- 逐项通过率（validation）：S11_1 0%，S11_2 0%，S21_1 9.3%，S21_2 0.2%，S21_3 9.2%，S21_4 0.1%，S21_5 7.7%。
+
+### 6.5 诊断结果
+
+| 诊断 | 结果 |
+|---|---|
+| 均值基线 | MAE 0.03923 |
+| kNN k=1 / 5 / 20 | 0.0481 / 0.0371 / 0.0352 |
+| Ridge on PCA-256 | **0.02887**（优于 FNO ~10%） |
+| Ridge PCA-1024 | 0.03016 |
+| 64-sample 强过拟合 | train loss 0.00012（MAE ≈0.003），容量充足 |
+| train/val gap | train MAE 0.02739 vs val 0.03222；后期 train loss↓、val↑ |
+| agg-length 64 探针 | MAE 0.03157，mean miss 20.57，8.39M 参数，仍 pass=0（~2% 改善） |
+| m32 第二 seed | val MAE 0.03204（seed 方差 ~0.7%） |
+
+**可辨识性**：
+
+- 平均 per-parameter R² = 0.2725，中位数 0.2293。
+- 好：`0 (R²=0.963, MAE=0.0067)`、`3 (0.907, 0.0117)`、`2 (0.905, 0.0112)`。
+- 差（R² < 0.1）：`1, 21, 23, 26, 29, 31, 33, 34, 37, 38, 39, 40`。
+- 最难 MAE：`1 0.0409, 33 0.0407, 38 0.0402, 26 0.0399, 40 0.0399, 21 0.0397, 31 0.0394, 29 0.0388, 23 0.0380, 34 0.0379`。
+- 单参数敏感度（δ=0.01）中位数 0.0229；最弱集合 `1, 40, 38, 39, 33, 35, 36, 31, 37, 34`，与低 R² 集合高度重合。
+- 局部 Jacobian 条件数：anchor 238.9，seed0 509.5；最小相对奇异值 0.037 / 0.015。
+
+**Anchor 容差（单参数扰动，实测）**：
+
+| δ | 合规率 | 最坏 min margin |
+|---:|---:|---:|
+| 0.001 | 100% | +0.383 dB |
+| 0.002 | 98.8% | −0.168 dB |
+| 0.005 | 57.3% | −1.687 dB |
+| 0.010 | 20.7% | −4.858 dB |
+| 0.020 | 7.3% | −10.966 dB |
+
+**失败机制**：
+
+- 84% 的 state 由 S11 频段限制（48% / 36%），平均 miss ≈18.7 dB；S21 占 16%，但 miss 30–35 dB。
+- `corr(‖e‖∞, max_miss)=0.0795`；按危险参数梯度加权的误差相关性 0.211 → 方向比幅值更重要。
+- 用 anchor margin 梯度线性化预测“全部通过”，实际 miss ≈21 dB → 0.03 误差已使通带严重失配，属强非线性。
+- 结论：要 one-shot 合规，单参数精度需 ~0.001–0.002；当前 MAE 0.032 约差 20–30 倍。
+
+### 6.6 Q1–Q6 结论
+
+1. **Best representation**：R3 raw+Tukey（α=0.25），但优势在噪声内。
+2. **State accuracy**：MAE 0.0322，P95 0.0833，P99 0.112，‖e‖∞ mean 0.106。
+3. **One-shot pass rate**：0/1000（validation 与 internal test 均为 0）。
+4. **Failure pattern**：少数危险方向 + 大量弱可辨识方向；S11 匹配坍塌主导。
+5. **64 modes 是否足够**：不需要 64；**32 已足够且最优**。
+6. **限制类型**：**generalization/data-limited + 逆问题病态**；不是 capacity 或优化崩溃。
+
+
+---
+
+## 7. 已知问题
+
+1. **one-shot pass = 0**：即使最好的 m32 模型，state 误差仍比容差大 20–30 倍；S11 带内几乎全反射。
+2. **弱可辨识参数**：12 个参数 R²<0.1；这些方向在任何纯监督方案下都很难靠 8k 样本恢复。
+3. **anchor 余量小**：+0.64 dB，单参数 0.005 扰动即有 42.7% 概率破坏合规；但即使扩大 anchor 余量也无法吸收 0.03 的误差。
+4. **FNO/aggregation 不是主瓶颈**：agg64 只提升 ~2%；Ridge 反超 FNO ~10%，说明架构仍有优化空间，但不足以跨越数量级差距。
+5. **fp16 AMP 不可用**：奇数长度 cuFFT half 精度不支持，部分路线溢出；已固定 bf16 + FFT float32。
+6. **多进程 BLAS 线程超订**：数据/anchor 脚本必须设 `OPENBLAS/OMP/MKL_NUM_THREADS=1`，否则会卡住（本阶段曾因此重启一次 R2）。
+7. TorchScript trace 对静态长度有 TracerWarning（2001/2129 固定），batch 维仍动态，已验证 B=1/4。
+
+---
+
+## 8. 建议下一步（未执行）
+
+1. **扩大训练数据（最高优先级）**：8k → 50k–200k states。当前吞吐 ~190 states/s，50k 约 5 分钟；这是最可能把 MAE 降到 0.01 以下的杠杆。
+2. **margin/sensitivity-aware loss**：对危险方向（`8, 32, 37, 35, 22, 23, 10, 24, 31, 5`）加权；对不可辨识方向降权；或直接用可微 surrogate 优化 correction 后的 7 项 margin。
+3. **robust anchor refinement**：用真实 residual 分布优化 `m*_robust`，而不是继续最大化 nominal margin；但 anchor 只能辅助，不能替代 state 精度。
+4. **保留 R3 + m32**；暂不扩大 channels/blocks；若允许改 readout，aggregation length 64 是低风险小改进。
+5. **若目标是一次性高通过率**：考虑 unrolled/内部迭代 refinement 或 simulator-in-the-loop 可微 surrogate，把有效精度推到 1e-3。
+6. 不建议现在进入 Route 1/2/4；先解决数据规模与目标函数。
+
+---
+
+## 9. 合规与注意事项
+
+- **public seeds `10000–10049` 从未使用**；evaluator 有显式 guard（在调用 simulator 前抛出）。
+- **anchor 未在 Stage 2 重新优化**，仍为 `+0.6387 dB`。
+- **未修改 simulator**；仅使用公开 API。
+- **未训练 Route 1/2/4 的正式模型**；R1/R2 仅作为 mandated representation study。
+- internal test 仅在模型/representation/mode 选型完成后使用。
+- 本仓库**不包含**模型权重、anchor 向量、norm stats、residual npz、cache、runs；这些为本地生成产物。若仓库为 public，请注意作业学术诚信条款（不得交换 generated targets / compliant vectors / model weights）。
+- `assignments/` 为课程提供材料，除运行外不要修改。
+
+---
+
+## 10. 交接清单
+
+先读：
+
+1. 本文件 §3（contract）与 §6（结论）；
+2. `solution/models.py`、`solution/trainer.py`、`solution/evaluator.py`、`solution/analysis.py`；
+3. `scripts/train.py`、`scripts/analyze_model.py`。
+
+本地关键文件（不在 git）：
+
+```text
+cache/dataset/                                    数据缓存 + manifest
+artifacts/common/anchor.npz                       合规 anchor 向量
+artifacts/common/norm_stats.npz                   归一化统计
+artifacts/analysis/final_m32/validation/          最终模型 residual + summary + plots
+artifacts/analysis/final_m32/internal_test/       同上
+runs/route3_modes/r3_m32_s2026/best_mae.pt        最终参考 checkpoint
+runs/route3_export/s_to_delta_m.pt                最终模型 TorchScript
+runs/route3_repr/                                 R1/R2/R3 runs
+runs/route3_modes/                                mode study runs
+runs/route3_diag/                                 agg64 + seed2027 runs
+```
+
+建议的交接验证：
+
+```bash
+.venv/bin/python -m unittest discover -s tests -v          # 期望 22 tests OK
+.venv/bin/python scripts/smoke_test.py --tiny-steps 30     # 期望 checks 全 true
+.venv/bin/python scripts/evaluate.py --config configs/route_delay_fno_r3_m32.json \
+  --checkpoint runs/route3_modes/r3_m32_s2026/best_mae.pt \
+  --split validation --limit 200 --identification-limit 200
+```
+
+---
+
+## 11. 命令速查
+
+| 目的 | 命令 |
+|---|---|
+| 生成数据 + stats | `scripts/build_dataset.py --workers 12 --norm-configs ...` |
+| 找 anchor | `scripts/find_anchor.py --workers 12 --population 256 --iterations 150 ...` |
+| 训练 | `scripts/train.py --config <cfg> --run-name <name> --output-dir <dir> --epochs 120` |
+| 评估 | `scripts/evaluate.py --config <cfg> --checkpoint <pt> --split validation --limit 1000` |
+| 导出 | `scripts/export_model.py --config <cfg> --checkpoint <pt> --output-dir <dir>` |
+| 残差分析 | `scripts/analyze_model.py --config <cfg> --checkpoint <pt> --split validation --limit 1000` |
+| 单测 | `.venv/bin/python -m unittest discover -s tests -v` |
+| smoke | `.venv/bin/python scripts/smoke_test.py --tiny-steps 30` |
+
+> 多进程 / simulator 密集命令前加：`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1`
+

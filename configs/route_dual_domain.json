@@ -1,0 +1,91 @@
+{
+  "route": "dual_domain",
+  "seed": 2026,
+  "data": {
+    "train": {"start": 0, "stop": 8000},
+    "validation": {"start": 20000, "stop": 21000},
+    "internal_test": {"start": 30000, "stop": 31000},
+    "dataset_dir": "cache/dataset",
+    "batch_size": 32
+  },
+  "normalization": {
+    "type": "per_channel_position",
+    "stats_file": "artifacts/common/norm_stats.npz",
+    "eps": 1e-06
+  },
+  "branches": [
+    {
+      "representation": {"type": "frequency"},
+      "normalization": {
+        "type": "per_channel_position",
+        "stats_file": "artifacts/common/norm_stats.npz",
+        "stats_key": "freq",
+        "eps": 1e-06
+      },
+      "encoder": {
+        "type": "resnet",
+        "in_channels": 4,
+        "channels": [48, 64, 96],
+        "blocks_per_stage": 2,
+        "kernel_size": 9,
+        "dilation_cycle": [1, 2, 4],
+        "norm": "group",
+        "groups": 8,
+        "dropout": 0.0,
+        "use_pooling": true,
+        "multiscale": true,
+        "pool_kernel": 4,
+        "pool_stride": 2
+      },
+      "aggregate": {"type": "multiscale", "length": 6}
+    },
+    {
+      "representation": {
+        "type": "delay",
+        "window": "tukey",
+        "tukey_alpha": 0.25,
+        "delay_concat_raw": true
+      },
+      "normalization": {
+        "type": "per_channel_position",
+        "stats_file": "artifacts/common/norm_stats.npz",
+        "stats_key": "delay_tukey_concat",
+        "eps": 1e-06
+      },
+      "encoder": {
+        "type": "fno",
+        "in_channels": 8,
+        "hidden_channels": 80,
+        "n_modes": 48,
+        "fno_blocks": 3,
+        "local_kernel": 5,
+        "padding_points": 64,
+        "norm": "group",
+        "groups": 8,
+        "dropout": 0.0,
+        "use_pooling": true,
+        "multiscale": true,
+        "pool_kernel": 4,
+        "pool_stride": 2
+      },
+      "aggregate": {"type": "multiscale", "length": 6}
+    }
+  ],
+  "head": {"type": "res_mlp", "hidden": 256, "blocks": 2, "dropout": 0.0, "output_dim": 41},
+  "anchor_file": "artifacts/common/anchor.npz",
+  "output_clamp": false,
+  "train": {
+    "seed": 2026,
+    "epochs": 1,
+    "batch_size": 32,
+    "learning_rate": 0.0003,
+    "weight_decay": 0.0001,
+    "optimizer": "adamw",
+    "grad_clip": 1.0,
+    "amp": true,
+    "device": "auto",
+    "scheduler": "cosine",
+    "loss": "huber",
+    "huber_delta": 1.0
+  }
+}

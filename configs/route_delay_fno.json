@@ -1,0 +1,65 @@
+{
+  "route": "delay_fno",
+  "seed": 2026,
+  "data": {
+    "train": {"start": 0, "stop": 8000},
+    "validation": {"start": 20000, "stop": 21000},
+    "internal_test": {"start": 30000, "stop": 31000},
+    "dataset_dir": "cache/dataset",
+    "batch_size": 32
+  },
+  "representation": {
+    "type": "delay",
+    "window": "tukey",
+    "tukey_alpha": 0.25,
+    "delay_concat_raw": true
+  },
+  "normalization": {
+    "type": "per_channel_position",
+    "stats_file": "artifacts/common/norm_stats.npz",
+    "stats_key": "delay_tukey_concat",
+    "eps": 1e-06
+  },
+  "encoder": {
+    "type": "fno",
+    "in_channels": 8,
+    "hidden_channels": 96,
+    "n_modes": 64,
+    "fno_blocks": 4,
+    "local_kernel": 5,
+    "padding_points": 64,
+    "norm": "group",
+    "groups": 8,
+    "dropout": 0.0,
+    "use_pooling": true,
+    "multiscale": true,
+    "pool_kernel": 4,
+    "pool_stride": 2
+  },
+  "pooling": {
+    "type": "info_preserving",
+    "kernel_size": 4,
+    "stride": 2,
+    "tau": 1.0,
+    "learnable_tau": true,
+    "tau_min": 0.05
+  },
+  "aggregate": {"type": "multiscale", "length": 8},
+  "head": {"type": "res_mlp", "hidden": 256, "blocks": 2, "dropout": 0.0, "output_dim": 41},
+  "anchor_file": "artifacts/common/anchor.npz",
+  "output_clamp": false,
+  "train": {
+    "seed": 2026,
+    "epochs": 1,
+    "batch_size": 32,
+    "learning_rate": 0.0003,
+    "weight_decay": 0.0001,
+    "optimizer": "adamw",
+    "grad_clip": 1.0,
+    "amp": true,
+    "device": "auto",
+    "scheduler": "cosine",
+    "loss": "huber",
+    "huber_delta": 1.0
+  }
+}
