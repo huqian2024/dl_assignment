@@ -21,6 +21,11 @@ raw S (B, 4, 2001)  ->  delta_m (B, 41)
   constrained local teacher search on 256 train states. The compliant region is
   a tiny pocket near the anchor; teacher corrections are ~97% of the anchor
   correction, dense, and no more learnable/consistent. No 8000-state expansion.
+- **Stage 5 (system-identification features)**: complete — complex-algebra
+  features, shared-denominator rational fitting (Chebyshev, frequency holdout)
+  and Ridge/MLP regression. Rational coefficients improve parameter MAE
+  0.0295→0.0250 and weak-parameter R² substantially, but one-shot remains
+  0% pass / mean miss 20.5 dB, so no 8000-state expansion.
 - **Final reference model**: R3 raw+Tukey(α=0.25), FNO 32 modes, 3.28M parameters.
   Validation MAE `0.0322`, one-shot pass rate `0/1000` (current known limitation).
 

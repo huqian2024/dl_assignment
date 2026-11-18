@@ -1,0 +1,16 @@
+{
+  "48": {
+    "order": 48,
+    "holdout_relative_l2_median": 0.000373204345275865,
+    "spec_max_error_db_median": 0.12108794669138945,
+    "feature_dim_r1": 292,
+    "r2_nan_fraction": 0.0
+  },
+  "64": {
+    "order": 64,
+    "holdout_relative_l2_median": 1.2251945791199774e-06,
+    "spec_max_error_db_median": 0.0004288851126608151,
+    "feature_dim_r1": 388,
+    "r2_nan_fraction": 0.0
+  }
+}

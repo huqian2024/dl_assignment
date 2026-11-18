@@ -14,6 +14,7 @@
 | Stage 2 | Route 3 正式研究：representation R1/R2/R3、FNO modes 32/64/96/128、state/one-shot/residual 分析 | ✅ 完成 |
 | Stage 3 | Pairwise / observable-subspace control 研究：response PCA、local Jacobian、可观测子空间、线性差分 controller | ✅ 完成（线性无信号，按规则停止） |
 | Stage 4 | Per-state compliant teacher 结构验证（256-state train pilot，线搜索 + 局部可行点搜索 + 几何/可学习性分析） | ✅ 完成（无积极信号，不扩展到 8000） |
+| Stage 5 | System-identification / rational representation（complex algebra、shared-denominator fit、Ridge/MLP） | ✅ 完成（表示层有正信号，但 one-shot 仍 0；按规则不扩到 8000） |
 
 **最终参考模型**：Route 3（Delay-FNO）+ **R3 raw+Tukey(α=0.25) + 32 modes**  
 - 3,275,325 参数；
@@ -740,5 +741,163 @@ per-state teacher 与 fixed-anchor correction 在 norm、方向、sparsity、obs
 
 不建议对 8000 states 生成 teacher；若未来重开此方向，需要先改变 compliance target 族（多 anchor / 更宽 margin）
 或大幅扩充数据，而不是继续优化 teacher。
+
+
+---
+
+## 14. Stage 5 — System-identification / rational representation
+
+### 14.1 目标与约束
+
+把 `S11,S21` 从“4×2001 real sequence”重新视为有限阶 LTI 复频率响应，测试 rational /
+system-identification 特征是否让 41-D 参数（或 anchor correction）更易恢复。
+
+- **不扩充 state 数据**：只用缓存 train 512 → 2000、validation 1000；未调用 `sample_state`。
+- 不读取 simulator internals；只用公开频率网格与复响应。
+- 未使用 public seeds；未修改 simulator；未重新优化 anchor。
+
+### 14.2 实现
+
+```text
+solution/system_id.py          Chebyshev shared-denominator rational fit、
+                              frequency-holdout 重建、spec 重建、系数/极点零点、
+                              complex algebra / log-derivative features
+scripts/system_id_pilot.py     sweep | rational | algebra | regress
+
+artifacts/system_id/
+  sweep_512.json                     order sweep（512 states，75%/25% 频率 holdout）
+  rational_train.npz / .json         2000 states 的 coefficients / features
+  rational_validation.npz / .json    1000 states
+  algebra_regression_2000.json       F1/F2/F3/log-deriv 的 PCA-Ridge
+  rational_regression_2000.json      R1/R2/R3 的 PCA-Ridge
+  oneshot_r3_order64.json            best cheap model 的官方 one-shot
+  mlp_rational_features.json         small MLP 对照
+  stage5_summary.json                汇总
+```
+
+Rational 模型（shared denominator）：
+
+```text
+D(x)  = 1 + sum_{k=1..p} d_k T_k(x)
+N11(x)= sum a_k T_k(x),  N21(x)= sum b_k T_k(x)
+S11=N11/D, S21=N21/D
+x in [-1,1]（频率线性映射），complex least squares + Tikhonov，列归一化
+fit: 75% frequency bins, evaluate: 25% held-out bins
+```
+
+复现：
+
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+.venv/bin/python scripts/system_id_pilot.py --stage sweep --n-sweep 512 --workers 12
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+.venv/bin/python scripts/system_id_pilot.py --stage rational --orders 48 64 --n-rational 2000 --workers 6
+.venv/bin/python scripts/system_id_pilot.py --stage algebra --n-algebra 2000
+.venv/bin/python scripts/system_id_pilot.py --stage regress --orders 48 64 --n-rational 2000
+```
+
+### 14.3 Rational fit（Q1/Q2）
+
+512 个 train states，λ=1e-10，75% 频率拟合 / 25% holdout：
+
+| order | holdout relL2 median | relL2 p90 | spec err median (dB) | spec err p90 | rel>1e-3 states | nonfinite | cond median |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 32 | 0.0321 | 0.0753 | 8.28 | 19.8 | 512/512 | 0 | 6.3e8 |
+| 40 | 0.00942 | 0.0249 | 2.59 | 12.8 | 502/512 | 0 | 8.7e8 |
+| 48 | 3.92e-4 | 2.16e-3 | 0.132 | 2.38 | 135/512 | 0 | 1.2e9 |
+| 56 | 1.06e-5 | 7.93e-5 | 0.0034 | 0.074 | 1/512 | 0 | 1.9e9 |
+| 64 | 1.41e-6 | 9.99e-6 | 0.00047 | 0.013 | 0/512 | 0 | 3.3e9 |
+
+**Q1：可以。** order 56/64 在未参与拟合的频率 bins 上 complex relL2 ~1e-5–1e-6，七项 spec summary 误差 ~1e-3–1e-2 dB；512 个 state 均无 nonfinite。
+**Q2：有效 order ≈ 48–64。** order 48 已可用（relL2 4e-4，spec 0.13 dB），order 64 近乎精确。
+
+### 14.4 Complex algebra features（Q5）
+
+2000 train / 1000 validation，PCA + Ridge（λ 用 train 内部 split 选择），target = absolute u：
+
+| feature | best physical MAE | mean R² | #R²<0.1 |
+|---|---:|---:|---:|
+| raw response | **0.02950** | 0.342 | 15 |
+| 1/S21 (eps 1e-6) | 0.03765 | 0.066 | 30 |
+| S11/S21 (eps 1e-6) | 0.03768 | 0.065 | 31 |
+| combined (eps 1e-6) | 0.03722 | 0.082 | 27 |
+| log-derivative (eps 1e-6) | 0.03762 | 0.072 | 29 |
+
+**Q5：没有额外信息。** 所有 complex algebra / log-derivative 变换都明显差于 raw response。
+
+### 14.5 Rational features（Q3/Q4）
+
+| feature | best physical MAE | mean R² | #R²<0.1 | K |
+|---|---:|---:|---:|---:|
+| raw response | 0.02950 | 0.342 | 15 | 64 |
+| R1 order48 coefficients | 0.02622 | 0.456 | 4 | 256 |
+| R1 order64 coefficients | 0.02601 | 0.464 | 4 | 256 |
+| R3 order48 + raw PCA64 | 0.02503 | 0.501 | 4 | 256 |
+| R3 order64 + raw PCA64 | **0.02502** | **0.504** | **3** | 256 |
+| R2 poles/zeros order48 | 0.03375 | 0.234 | 10 | 256 |
+| R2 poles/zeros order64 | 0.03482 | 0.178 | 18 | 256 |
+
+**Q3：系数特征明显更好；极点/零点不稳定。** R1/R3 相对 raw 的 MAE 降低约 **15%**，mean R² 0.34→0.50，R²<0.1 参数 15→3；R2（排序后的 roots）反而比 raw 更差，说明 root/permutation conditioning 不可靠，不采用。
+
+**Q4：weak parameters 显著改善（raw → R1 order64 / R3 order64）**
+
+| param | raw R² | R1-64 R² | R3-64 R² |
+|---:|---:|---:|---:|
+| 1 | −0.026 | 0.617 | 0.623 |
+| 37 | 0.009 | 0.561 | 0.572 |
+| 38 | 0.009 | 0.385 | 0.372 |
+| 39 | 0.069 | 0.667 | 0.696 |
+| 40 | 0.014 | 0.260 | 0.309 |
+| 34 | 0.128 | 0.485 | 0.487 |
+| 29 | 0.070 | 0.209 | 0.199 |
+| 33 | 0.017 | 0.157 | 0.162 |
+| 21 | 0.085 | 0.077 | 0.086 |
+| 23 | 0.033 | 0.010 | 0.023 |
+| 26 | 0.064 | 0.074 | 0.115 |
+| 31 | 0.021 | 0.067 | 0.074 |
+
+Dangerous parameters 同样改善：32 `0.177→0.469`，35 `0.075→0.594`，37 `0.009→0.572`；
+8/5/10 基本保持（0.81–0.90）。
+
+### 14.6 Small MLP 对照
+
+452-dim R3 features → 256 → 256 → 41（192,297 参数）：
+
+```text
+physical MAE 0.02731, mean R² 0.439, #R²<0.1 = 6
+```
+
+**不如 Ridge**（0.02502 / 0.504 / 3）；在 2000 样本上 MLP 没有额外收益。
+
+### 14.7 One-shot（Q6）
+
+Best cheap model：Ridge on R3(order64)+raw64，K=256，validation 1000：
+
+```text
+pass 0/1000 (0%)
+mean 20.50 dB, median 18.69, P90 30.76, worst 56.23
+correction L2 mean 0.340, clipping 0.96%
+```
+
+对比旧 Route-3 state model：mean 20.95 dB，pass 0。  
+**Q6：没有显著改善。** 表示层提升了 state 回归，但仍远不足以跨越 compliance 精度门槛。
+
+### 14.8 Q7 — realization / parameterization ambiguity
+
+Rational order 64 对 response 的重建几乎精确（holdout relL2 ~1e-6，spec 误差 <0.001 dB），
+但仍有 4 个参数 R²<0.1：**21, 23, 26, 31**（另有 33/29 较低）。
+这提供了明确的 **response-equivalent / near-equivalent hidden-state ambiguity** 证据：
+
+> 频响可以被低阶 rational model 精确表示，但 41 维隐藏参数化中的部分方向仍不可从 S 唯一恢复。
+
+因此不能把问题简单归结为“更多数据”；至少有一部分是 realization/parameterization ambiguity。
+
+### 14.9 结论与 Stop
+
+- Rational/system-ID 表示是**真实的正向信号**（weak parameters 大幅改善，MAE −15%）。
+- 但 MAE 仍 0.025、one-shot mean 20.5 dB / pass 0，仍落在“未解决核心问题”的区间（0.025–0.03）。
+- 按 §17/§21：**不扩展到 8000 states、不训练 FNO/大模型**。本阶段停止。
+- 若继续，优先方向应是：在 rational coefficients 上结合 margin/sensitivity-aware 目标、
+  或研究 canonical realization/control map，而不是增加样本或换更大网络。
 
 
