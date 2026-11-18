@@ -1,0 +1,74 @@
+{
+  "full_coefficients": {
+    "pass_rate": 0.0,
+    "mean_max_miss_db": 20.400953557916882,
+    "median_max_miss_db": 18.658555507659912,
+    "p90_max_miss_db": 29.91957447052002,
+    "worst_max_miss_db": 61.38972732543945,
+    "physical_mae": 0.024302343213825545,
+    "dangerous_physical_mae": 0.024473925455329636,
+    "dangerous_physical_p95": 0.0690269431536478,
+    "mean_r2": 0.5302528139768993,
+    "count_r2_below_0_1": 1
+  },
+  "pca_320": {
+    "pass_rate": 0.0,
+    "mean_max_miss_db": 20.1595552932179,
+    "median_max_miss_db": 18.6704221367836,
+    "p90_max_miss_db": 28.45866939544678,
+    "worst_max_miss_db": 48.35140106201172,
+    "physical_mae": 0.024255226324050895,
+    "dangerous_physical_mae": 0.02446082678312279,
+    "dangerous_physical_p95": 0.06883573219145517,
+    "mean_r2": 0.531877440803877,
+    "count_r2_below_0_1": 1
+  },
+  "pls_128": {
+    "pass_rate": 0.0,
+    "mean_max_miss_db": 21.061853616846797,
+    "median_max_miss_db": 18.88313227891922,
+    "p90_max_miss_db": 31.494069595336914,
+    "worst_max_miss_db": 89.3606948852539,
+    "physical_mae": 0.025899051704575373,
+    "dangerous_physical_mae": 0.02566537043136611,
+    "dangerous_physical_p95": 0.07003481905046159,
+    "mean_r2": 0.48692312631521206,
+    "count_r2_below_0_1": 1
+  },
+  "probe_P4_S_plus_denominator": {
+    "pass_rate": 0.0,
+    "mean_max_miss_db": 21.7322944223845,
+    "median_max_miss_db": 19.022347062826157,
+    "p90_max_miss_db": 32.12554618835449,
+    "worst_max_miss_db": 89.4608447265625,
+    "physical_mae": 0.027921154846101727,
+    "dangerous_physical_mae": 0.028666785283485728,
+    "dangerous_physical_p95": 0.07791289395424071,
+    "mean_r2": 0.29131253283467573,
+    "count_r2_below_0_1": 14
+  },
+  "quad_32": {
+    "pass_rate": 0.0,
+    "mean_max_miss_db": 22.017208171135184,
+    "median_max_miss_db": 19.16337078809738,
+    "p90_max_miss_db": 34.55339920043945,
+    "worst_max_miss_db": 61.36589050292969,
+    "physical_mae": 0.029251878630254333,
+    "dangerous_physical_mae": 0.028299837443093924,
+    "dangerous_physical_p95": 0.07645659546093743,
+    "mean_r2": 0.3519150362345852,
+    "count_r2_below_0_1": 10
+  },
+  "pca256_plus_raw64": {
+    "pass_rate": 0.0,
+    "mean_max_miss_db": 19.825917596585153,
+    "median_max_miss_db": 18.487391889095306,
+    "p90_max_miss_db": 26.826244468688966,
+    "worst_max_miss_db": 58.489356994628906,
+    "physical_mae": 0.0233,
+    "dangerous_physical_mae": 0.02387,
+    "dangerous_physical_p95": 0.0675,
+    "mean_r2": 0.564,
+    "count_r2_below_0_1": 1
+  }
+}

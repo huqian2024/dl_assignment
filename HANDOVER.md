@@ -1099,3 +1099,190 @@ Validation 1000，best-anchor correction：
 
 > Stage 5 的“ambiguity”解释不成立，Stage 6 也没有证明 control ambiguity。
 
+
+---
+
+## 16. Stage 7 — rational-coordinate stability、full-rank 与 probes
+
+### 16.1 范围
+
+- 只使用已有 train 8000 / validation 1000；未 `sample_state`、未新增 seed、未使用 public seeds、未重优化 anchor。
+- 代码：`scripts/stage7_study.py`；结果：`artifacts/stage7/*.json`。
+- 没有训练 FNO/Transformer；没有用 validation 拟合 residual。
+
+### 16.2 Coefficient stability audit（Q1）
+
+256 个 train states × 3 个 deterministic 75/25 frequency masks（A/B/C）× 3 个 λ（3e-11/1e-10/3e-10），
+共 2304 次 order64 shared-denominator 拟合；denominator 固定为 `D=1+Σ d_k T_k`，没有 scale ambiguity。
+
+| 指标 | median | P90 | P99 | max |
+|---|---:|---:|---:|---:|
+| coefficient relative L2 variation | **1.87e-4** | 2.74e-4 | 2.33e-3 | 2.85e-2 |
+| coefficient cosine | ≈1.0 | ≈1.0 | ≈1.0 | ≈1.0 |
+| probe relative variation | **8.52e-6** | 1.90e-4 | 1.41e-3 | 4.29e-3 |
+| reconstruction relL2 | 1.30e-6 | 1.30e-5 | 6.12e-5 | 2.78e-4 |
+| spec error (dB) | 3.84e-4 | 1.15e-2 | 2.45e-1 | 4.05 |
+| fit condition number | 3.11e9 | 5.10e9 | 7.25e9 | 1.19e10 |
+
+Per-group coefficient variation (median)：D **3.27e-4**，S11 numerator **1.43e-4**，S21 numerator **2.02e-4**；
+per-coordinate CV median 6.88e-4，P90 1.96e-2。
+
+**Q1 结论：** order64 coefficients 对 mask/λ 是**稳定坐标**；没有出现“reconstruction 1e-6 但 coefficient 变化 1e-2/1e-1”的现象。
+complex probe 更稳定（8.5e-6），但这不是必要的替代坐标。
+
+
+
+
+
+### 16.3 Full coefficients、per-output Ridge 与 PCA truncation（Q2/Q3）
+
+Full 388-D standardized coefficients + per-output Ridge（λ_j 在 train 0:7000/7000:8000 上逐参数选择）：
+
+```text
+normalized MAE 0.18615
+physical MAE   0.02430
+mean R²        0.530
+median R²      0.507
+#R²<0.1        1  (param 23)
+weak 21/23/26/31 R² = 0.136 / 0.080 / 0.174 / 0.151
+```
+
+PCA truncation（同样 per-output Ridge）：
+
+| K | normalized MAE | physical MAE | mean R² | #R²<0.1 | 21 R² | 23 R² | 26 R² | 31 R² |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 64 | 0.23289 | 0.03010 | 0.349 | 5 | 0.076 | 0.043 | 0.126 | 0.089 |
+| 128 | 0.21199 | 0.02758 | 0.427 | 2 | 0.100 | 0.040 | 0.128 | 0.110 |
+| **256** | **0.18609** | **0.02429** | **0.530** | **1** | 0.140 | 0.073 | 0.186 | 0.152 |
+| 320 | 0.18578 | 0.02426 | 0.532 | 1 | 0.141 | 0.079 | 0.184 | 0.150 |
+| 388 (full) | 0.18608 | 0.02429 | 0.530 | 1 | 0.137 | 0.073 | 0.182 | 0.151 |
+
+**Q2 结论：** PCA256 已经接近 full-rank；没有观察到某些 parameter 只在 full-rank 突然恢复。
+PCA truncation **没有明显丢失 target-relevant information**。但 full coefficients 单独仍不如 Stage 6 的
+`rational256 + raw PCA64`：
+
+| feature | physical MAE | mean R² | #R²<0.1 |
+|---|---:|---:|---:|
+| full coefficients only | 0.02430 | 0.530 | 1 |
+| full + raw64 | 0.02337 | 0.564 | 1 |
+| **PCA256 + raw64** | **0.02330** | **0.564** | **1** |
+| Stage 6 V4 Ridge reference | **0.02329** | **0.564** | **1** |
+
+**Q3 结论：** full coefficient + per-output λ 没有超过 Stage 6；raw PCA64 仍是必要的稳定补充。
+
+### 16.4 Supervised PLS2（Q4）
+
+train-only PLS2 deflation，latent dimension → per-output Ridge：
+
+| latent dim | normalized MAE | physical MAE | mean R² |
+|---:|---:|---:|---:|
+| 16 | 0.25975 | 0.03359 | 0.236 |
+| 24 | 0.24738 | 0.03203 | 0.293 |
+| 32 | 0.23843 | 0.03094 | 0.330 |
+| 41 | 0.23179 | 0.03014 | 0.358 |
+| 64 | 0.21912 | 0.02847 | 0.407 |
+| 96 | 0.20549 | 0.02684 | 0.461 |
+| 128 | 0.19861 | 0.02590 | 0.487 |
+
+**Q4 结论：** supervised PLS **没有优于** unsupervised PCA256 / full coefficients；低维 supervised latent 不足，
+
+
+### 16.5 Coeff group ablation（Q5）
+
+| feature group | physical MAE | mean R² | weak 21/23/26/31 R² |
+|---|---:|---:|---|
+| G1 denominator only | 0.02868 | 0.398 | 0.095 / 0.062 / 0.169 / 0.131 |
+| G2 S11 numerator only | 0.02697 | 0.443 | 0.126 / 0.082 / 0.180 / 0.149 |
+| G3 S21 numerator only | 0.03490 | 0.177 | 0.059 / 0.018 / 0.075 / 0.012 |
+| G4 D + S11 | 0.02557 | 0.491 | 0.132 / 0.090 / 0.187 / 0.167 |
+| G5 D + S21 | 0.02716 | 0.447 | 0.097 / 0.056 / 0.158 / 0.129 |
+| G6 all | **0.02430** | **0.530** | 0.136 / 0.080 / 0.174 / 0.151 |
+
+**Q5 结论：** S11 numerator 是单个最强 group；denominator 次之；S21 numerator 单独最弱。
+21/23/26/31 的信息几乎都已在 S11 numerator 中（G2 与 G6 的 R² 接近），S21 对这些参数帮助很小。
+危险参数 5/8/10 也主要来自 S11；S21 对 35/37 有一定补充。若后续做结构模型，D+S11 是自然的 first branch，
+S21 作为 secondary branch；但本阶段没有证据支持比 full 特征更强的 group-specific 结构。
+
+### 16.6 Complex-plane probes（Q6）
+
+固定 32 个实轴位置，η=0.02/0.05/0.10：
+
+| probe | feature dim | normalized MAE | physical MAE | mean R² |
+|---|---:|---:|---:|---:|
+| P1 η=0.02 | 128 | 0.23271 | 0.02985 | 0.298 |
+| P2 η=0.02+0.05 | 256 | 0.22848 | 0.02933 | 0.311 |
+| P3 η=0.02+0.05+0.10 | 384 | 0.23122 | 0.02967 | 0.196 |
+| P4 P3 + 1/D | 576 | **0.21653** | **0.02792** | 0.291 |
+
+Probe stability 明显优于 coefficient：8.52e-6 vs 1.87e-4；但预测力明显更差（0.2165 vs full 0.1862）。
+
+**Q6 结论：** complex probe 是更稳定的函数坐标，但不是更好的 inverse feature；没有带来参数回归收益。
+P4 加 denominator 有所改善，但仍远差于 full coefficients。
+
+### 16.7 Quadratic supervised inverse 与 residual structure（Q7）
+
+在 PLS latent d=16/24/32 上构造 `[z, z², z_i z_j]`，再 per-output Ridge：
+
+| latent d | quadratic MAE | quadratic physical MAE | linear PLS MAE（同 d） |
+|---:|---:|---:|---:|
+| 16 | 0.25170 | 0.03265 | 0.25975 |
+| 24 | 0.23553 | 0.03067 | 0.24738 |
+| 32 | 0.22342 | 0.02925 | 0.23843 |
+
+Quadratic 相对同维 linear PLS 有小幅改善（d=32: 0.2384→0.2234），但仍远差于 full/PCA（0.186）。
+Residual structure（base 0:5000，residual fit 5000:6500，eval 6500:8000）：
+
+```text
+base eval MAE       0.19018
+combined eval MAE   0.20527
+residual eval R²    mean -0.183, median -0.177
+```
+
+**Q7 结论：** 没有明显 quadratic 收益，residual 也不可预测；当前模型不是简单低阶非线性 underfit。
+
+高维也只是接近 full，而不是超过它。target-relevant low-variance directions 没有带来可见增益。
+
+
+
+### 16.8 One-shot（Q8）
+
+Validation 1000，全部候选均为 0% pass：
+
+| candidate | mean miss | median | P90 | worst |
+|---|---:|---:|---:|---:|
+| full coefficients | 20.40 dB | 18.66 | 29.92 | 61.39 |
+| PCA320 | 20.16 dB | 18.67 | 28.46 | 48.35 |
+| **PCA256 + raw64** | **19.83 dB** | **18.49** | **26.83** | **58.49** |
+| PLS128 | 21.06 dB | 18.88 | 31.49 | 89.36 |
+| probe P4 | 21.73 dB | 19.02 | 32.13 | 89.46 |
+| quadratic d=32 | 22.02 dB | 19.16 | 34.55 | 61.37 |
+| Stage 6 Global Ridge reference | 19.80 dB | 18.49 | 26.17 | 54.93 |
+| Stage 6 ResMLP reference | **18.96 dB** | 18.13 | 19.59 | 54.83 |
+
+**Q8 结论：** Stage 7 的最好 one-shot 是 `PCA256+raw64` 的 **19.83 dB**，没有超过 Stage 6
+Global Ridge（19.80）或 ResMLP（18.96）；全部 pass=0。Stage 7 没有出现 one-shot 改善。
+
+### 16.9 Q9 — 是否进入 canonical realization / Loewner？
+
+Stage 7 的实际结果是：
+
+```text
+coefficient 稳定
+PCA256 ≈ full-rank
+supervised PLS < unsupervised PCA
+complex probes 更稳定但不更有预测力
+quadratic / residual 无增益
+full coeff alone 不如 rational+raw
+```
+
+因此**没有证据**表明当前瓶颈是 rational feature extraction/compression 丢失了 inverse information；
+也没有证据表明低阶 structured nonlinear inverse 能解决问题。基于 Stage 7，**不建议现在进入
+canonical state-space / Loewner 路线**；那会是 speculative 的下一步，而不是由数据支持的结论。
+
+### 16.10 Stop
+
+- 已完成 stability audit、full coefficient regression、PCA truncation、PLS2、group ablation、
+  complex probes、quadratic、residual structure、validation one-shot。
+- **未新增任何 state，未使用新 seed/public seeds，未重优化 anchor，未训练 FNO/Transformer。**
+- Stage 7 没有超过 Stage 6；停止。若未来继续，应先解决 one-shot 精度门槛与 compliance sensitivity，
+  而不是继续更换 feature compression。

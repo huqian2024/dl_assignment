@@ -35,6 +35,15 @@ raw S (B, 4, 2001)  ->  delta_m (B, 41)
   best one-shot is ResMLP at **18.96 dB** mean miss (still 0% pass). The closest
   raw-response pair has `d_S=0.258`; therefore no true near-collision was found
   and Stage 5's ambiguity interpretation is retracted.
+- **Stage 7 (rational-coordinate stability / probes)**: complete — 256-state
+  coefficient stability audit, full 388-D per-output Ridge, PCA truncation
+  (64/128/256/320/full), train-only PLS2, denominator/S11/S21 ablation,
+  complex-plane probes, quadratic supervised inverse and residual structure.
+  Coefficients are stable (median relative drift 1.9e-4) and PCA256≈full
+  (physical MAE 0.02429); full coefficients alone (0.02430) do not beat
+  Stage 6's rational+raw V4 (0.02329). PLS, probes and quadratic did not help;
+  best Stage 7 one-shot is 19.83 dB mean miss (0% pass), so no canonical/Loewner
+  transition is justified.
 - **Final reference model**: R3 raw+Tukey(α=0.25), FNO 32 modes, 3.28M parameters.
   Validation MAE `0.0322`, one-shot pass rate `0/1000` (current known limitation).
 

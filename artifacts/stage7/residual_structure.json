@@ -1,0 +1,11 @@
+{
+  "base_eval_mae": 0.19017802323556499,
+  "combined_eval_mae": 0.20527200671995807,
+  "residual_mae": 0.19173763946383962,
+  "residual_eval_r2_mean": -0.18313289841495606,
+  "residual_eval_r2_median": -0.17740971258432903,
+  "n_base": 5000,
+  "n_residual_fit": 1500,
+  "n_eval": 1500,
+  "lambda": 0.001
+}
